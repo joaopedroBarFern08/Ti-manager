@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}TI Manager{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            TI Manager
+        </div>
+
+        <nav>
+
+            <a href="{{ url_for('dashboard.dashboard') }}">
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('atendimentos.atendimentos') }}">
+                Atendimentos
+            </a>
+
+            <a href="{{ url_for('maquinas.maquinas') }}">
+                Máquinas
+            </a>
+
+            <a href="{{ url_for('estoque.estoque') }}">
+                Estoque
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <h1>
+                {% block page_title %}{% endblock %}
+            </h1>
+
+        </header>
+
+
+        <section class="content">
+
+            {% block content %}
+            {% endblock %}
+
+        </section>
+
+    </main>
+
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}
+Novo Atendimento - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Novo Atendimento
+{% endblock %}
+
+{% block content %}
+
+<form
+    method="POST"
+    class="form"
+>
+
+    {% if erro %}
+
+        <div class="alert-error">
+            {{ erro }}
+        </div>
+
+    {% endif %}
+
+
+    <div class="form-group">
+
+        <label for="identificador">
+            Identificador da máquina
+        </label>
+
+        <input
+            type="text"
+            id="identificador"
+            name="identificador"
+            placeholder="Ex: 025618-EMP-N"
+            maxlength="30"
+            required
+        >
+
+        <small>
+            Formato: patrimônio-empresa-tipo
+        </small>
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="problema_relatado">
+            Problema relatado
+        </label>
+
+        <textarea
+            id="problema_relatado"
+            name="problema_relatado"
+            placeholder="Descreva o problema informado pelo usuário..."
+            required
+        ></textarea>
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="btn"
+    >
+        Registrar atendimento
+    </button>
+
+</form>
+
+{% endblock %}

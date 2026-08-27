@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}
+Máquina {{ maquina.identificador }} - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Máquina {{ maquina.identificador }}
+{% endblock %}
+
+{% block content %}
+
+<form method="POST" class="form">
+
+    <div class="card">
+
+        <h2>Informações da máquina</h2>
+
+        <br>
+
+        <div class="form-group">
+
+            <label for="identificador">
+                Identificador
+            </label>
+
+            <input
+                type="text"
+                id="identificador"
+                value="{{ maquina.identificador }}"
+                disabled
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="modelo">
+                Modelo
+            </label>
+
+            <input
+                type="text"
+                id="modelo"
+                name="modelo"
+                value="{{ maquina.modelo or '' }}"
+                placeholder="Modelo da máquina"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="usuario">
+                Usuário
+            </label>
+
+            <input
+                type="text"
+                id="usuario"
+                name="usuario"
+                value="{{ maquina.usuario or '' }}"
+                placeholder="Usuário da máquina"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="setor">
+                Setor
+            </label>
+
+            <input
+                type="text"
+                id="setor"
+                name="setor"
+                value="{{ maquina.setor or '' }}"
+                placeholder="Setor"
+            >
+
+        </div>
+
+
+       <div class="form-group">
+
+            <label for="ativo">
+                Status
+            </label>
+
+            <select
+                id="ativo"
+                name="ativo"
+            >
+
+                <option
+                    value="1"
+                    {% if maquina.ativo %}
+                        selected
+                    {% endif %}
+                >
+                    Ativo
+                </option>
+
+                <option
+                    value="0"
+                    {% if not maquina.ativo %}
+                        selected
+                    {% endif %}
+                >
+                    Inativo
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <br>
+
+        <button
+            type="submit"
+            class="btn"
+        >
+            Salvar alterações
+        </button>
+
+    </div>
+
+</form>
+
+
+<br>
+
+
+<div class="card">
+
+    <h2>Histórico de atendimentos</h2>
+
+    <br>
+
+    {% if maquina.atendimentos %}
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Atendimento
+                        </th>
+
+                        <th>
+                            Problema relatado
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Entrada
+                        </th>
+
+                        <th>
+                            Saída
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for atendimento in maquina.atendimentos|sort(
+                        attribute="data_entrada",
+                        reverse=true
+                    ) %}
+
+                    <tr
+                        class="linha-atendimento"
+                        onclick=window.location.href="{{ url_for('atendimentos.detalhe_atendimento', id=atendimento.id) }}"
+                    >
+
+                        <td>
+                            #{{ atendimento.id }}
+                        </td>
+
+                        <td>
+                            {{ atendimento.problema_relatado }}
+                        </td>
+
+                        <td>
+                            {{ atendimento.status }}
+                        </td>
+
+                        <td>
+                            {{ atendimento.data_entrada.strftime(
+                                '%d/%m/%Y %H:%M'
+                            ) }}
+                        </td>
+
+                        <td>
+
+                            {% if atendimento.data_saida %}
+
+                                {{ atendimento.data_saida.strftime(
+                                    '%d/%m/%Y %H:%M'
+                                ) }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+        <p>
+            Nenhum atendimento registrado para esta máquina.
+        </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

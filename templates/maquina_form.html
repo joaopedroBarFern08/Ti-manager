@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}
+Nova Máquina - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Nova Máquina
+{% endblock %}
+
+{% block content %}
+
+<form method="POST" class="form">
+
+    <div class="form-group">
+
+        <label for="patrimonio">
+            Patrimônio
+        </label>
+
+        <input
+            type="text"
+            id="patrimonio"
+            name="patrimonio"
+            placeholder="Ex: 025618"
+            required
+        >
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="empresa">
+            Empresa
+        </label>
+
+        <input
+            type="text"
+            id="empresa"
+            name="empresa"
+            placeholder="Ex: EMP"
+            maxlength="20"
+            required
+        >
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="tipo">
+            Tipo
+        </label>
+
+        <select
+            id="tipo"
+            name="tipo"
+            required
+        >
+
+            <option value="">
+                Selecione...
+            </option>
+
+            <option value="notebook">
+                Notebook
+            </option>
+
+            <option value="desktop">
+                Desktop
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="modelo">
+            Modelo
+        </label>
+
+        <input
+            type="text"
+            id="modelo"
+            name="modelo"
+            placeholder="Ex: Dell Latitude 3420"
+            required
+        >
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="usuario">
+            Usuário
+        </label>
+
+        <input
+            type="text"
+            id="usuario"
+            name="usuario"
+        >
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="setor">
+            Setor
+        </label>
+
+        <input
+            type="text"
+            id="setor"
+            name="setor"
+        >
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="btn"
+    >
+        Cadastrar máquina
+    </button>
+
+</form>
+
+{% endblock %}

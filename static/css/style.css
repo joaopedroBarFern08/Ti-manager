@@ -1,0 +1,397 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    color: #222;
+}
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+
+    width: 230px;
+    height: 100vh;
+
+    background: #1f2937;
+    color: white;
+
+    padding: 25px 15px;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+
+    margin-bottom: 35px;
+    padding: 0 10px;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar a {
+    color: #d1d5db;
+    text-decoration: none;
+
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.sidebar a:hover {
+    background: #374151;
+    color: white;
+}
+
+.main {
+    margin-left: 230px;
+    min-height: 100vh;
+}
+
+.topbar {
+    height: 75px;
+
+    background: white;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 30px;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.topbar h1 {
+    font-size: 24px;
+}
+
+.content {
+    padding: 30px;
+}
+
+
+/* DASHBOARD */
+
+.cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(200px, 1fr));
+
+    gap: 20px;
+}
+
+.card {
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 12px;
+
+    border: 1px solid #e5e7eb;
+}
+
+.card h3 {
+    color: #6b7280;
+    font-size: 14px;
+
+    margin-bottom: 10px;
+}
+
+.card strong {
+    font-size: 32px;
+}
+
+
+/* BOTÕES */
+
+.btn {
+    display: inline-block;
+
+    padding: 10px 16px;
+
+    border-radius: 7px;
+
+    border: none;
+
+    background: #2563eb;
+    color: white;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #1d4ed8;
+}
+
+
+/* TABELAS */
+
+.table-container {
+    background: white;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    border: 1px solid #e5e7eb;
+}
+
+table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 14px;
+
+    text-align: left;
+
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #f9fafb;
+}
+
+
+/* FORMULÁRIOS */
+
+.form {
+    max-width: 700px;
+
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 10px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+
+    padding: 11px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 7px;
+
+    font-size: 15px;
+}
+
+.form-group textarea {
+    min-height: 120px;
+
+    resize: vertical;
+}
+
+.devolver-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantidade-devolucao {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 38px;
+}
+
+.btn-qtd {
+    width: 34px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.btn-qtd:hover {
+    background: #f0f0f0;
+}
+
+.quantidade-devolucao input {
+    width: 35px;
+    height: 100%;
+    border: none;
+    text-align: center;
+    outline: none;
+    font-size: 14px;
+    background: transparent;
+}
+
+/* Remove as setinhas do input number */
+
+.quantidade-devolucao input::-webkit-outer-spin-button,
+.quantidade-devolucao input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantidade-devolucao input[type="number"] {
+    appearance: textfield;
+}
+
+.btn-devolver {
+    border: none;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.devolver-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quantidade-devolucao {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.btn-qtd {
+    width: 34px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.btn-qtd:hover {
+    background: #f1f1f1;
+}
+
+.quantidade-devolucao input {
+    width: 38px;
+    height: 100%;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: 14px;
+    background: transparent;
+}
+
+.quantidade-devolucao input::-webkit-inner-spin-button,
+.quantidade-devolucao input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.linha-atendimento {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.linha-atendimento:hover {
+    background-color: #f3f3f3;
+}
+
+.sugestoes-pecas {
+    position: relative;
+    width: 100%;
+}
+
+.sugestao-peca {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 10px 12px;
+
+    border: 1px solid #ddd;
+    border-top: none;
+
+    background: white;
+
+    cursor: pointer;
+}
+
+.sugestao-peca:hover {
+    background: #f5f5f5;
+}
+
+.sugestao-peca span {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+.sugestoes-pecas {
+    position: relative;
+    width: 100%;
+    z-index: 100;
+}
+
+.sugestao-peca {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 14px;
+
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+
+    cursor: pointer;
+}
+
+.sugestao-peca:hover {
+    background: #f5f5f5;
+}
+
+.sugestao-peca div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sugestao-peca strong {
+    font-size: 14px;
+}
+
+.sugestao-peca small {
+    color: #777;
+}
+
+.sugestao-peca > span {
+    font-size: 12px;
+    color: #666;
+}
+

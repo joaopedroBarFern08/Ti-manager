@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}
+Atendimento #{{ atendimento.id }} - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Atendimento #{{ atendimento.id }}
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+    <h2>Informações da máquina</h2>
+
+    <br>
+
+    <p>
+        <strong>Identificador:</strong>
+        {{ atendimento.maquina.identificador }}
+    </p>
+
+    <p>
+        <strong>Modelo:</strong>
+
+        {% if atendimento.maquina.modelo %}
+            {{ atendimento.maquina.modelo }}
+        {% else %}
+            Não informado
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Usuário:</strong>
+        {{ atendimento.maquina.usuario or "Não informado" }}
+    </p>
+
+    <p>
+        <strong>Setor:</strong>
+        {{ atendimento.maquina.setor or "Não informado" }}
+    </p>
+
+</div>
+
+
+<br>
+
+
+<div class="card">
+
+    <h2>Problema relatado</h2>
+
+    <br>
+
+    <p>
+        {{ atendimento.problema_relatado }}
+    </p>
+
+</div>
+
+
+<br>
+
+
+<!-- FORMULÁRIO DO ATENDIMENTO -->
+
+<form
+    method="POST"
+    class="form"
+>
+
+    <div class="form-group">
+
+        <label for="diagnostico">
+            Diagnóstico
+        </label>
+
+        <textarea
+            id="diagnostico"
+            name="diagnostico"
+            placeholder="Descreva o diagnóstico encontrado..."
+        >{{ atendimento.diagnostico or "" }}</textarea>
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="solucao">
+            Solução aplicada
+        </label>
+
+        <textarea
+            id="solucao"
+            name="solucao"
+            placeholder="Descreva o que foi feito para solucionar o problema..."
+        >{{ atendimento.solucao or "" }}</textarea>
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label for="status">
+            Status
+        </label>
+
+        <select
+            id="status"
+            name="status"
+        >
+
+            <option
+                value="Recebido"
+                {% if atendimento.status == "Recebido" %}selected{% endif %}
+            >
+                Recebido
+            </option>
+
+            <option
+                value="Em diagnóstico"
+                {% if atendimento.status == "Em diagnóstico" %}selected{% endif %}
+            >
+                Em diagnóstico
+            </option>
+
+            <option
+                value="Aguardando peça"
+                {% if atendimento.status == "Aguardando peça" %}selected{% endif %}
+            >
+                Aguardando peça
+            </option>
+
+            <option
+                value="Em manutenção"
+                {% if atendimento.status == "Em manutenção" %}selected{% endif %}
+            >
+                Em manutenção
+            </option>
+
+            <option
+                value="Finalizado"
+                {% if atendimento.status == "Finalizado" %}selected{% endif %}
+            >
+                Finalizado
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="btn"
+    >
+        Salvar alterações
+    </button>
+
+</form>
+
+
+<br>
+
+
+<!-- PEÇAS UTILIZADAS -->
+
+<div class="card">
+
+    <h2>Peças utilizadas</h2>
+
+    <br>
+
+
+    {% if atendimento.pecas %}
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Peça</th>
+                        <th>Quantidade</th>
+                        <th>Ações</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for item in atendimento.pecas %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.peca.nome }}
+                        </td>
+
+                        <td>
+
+                            {{ item.quantidade }}
+
+                        </td>
+
+                        <td>
+
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'atendimentos.devolver_peca_atendimento',
+                                    id=atendimento.id,
+                                    item_id=item.id
+                                ) }}"
+                                class="devolver-form"
+                            >
+
+                                <div class="quantidade-devolucao">
+
+                                    <button
+                                        type="button"
+                                        class="btn-qtd"
+                                        data-acao="diminuir"
+                                    >
+                                        −
+                                    </button>
+
+                                    <input
+                                        type="number"
+                                        name="quantidade"
+                                        value="1"
+                                        min="1"
+                                        max="{{ item.quantidade }}"
+                                        readonly
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="btn-qtd"
+                                        data-acao="aumentar"
+                                    >
+                                        +
+                                    </button>
+
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="btn-devolver"
+                                >
+                                    Devolver
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+        <p>
+            Nenhuma peça utilizada neste atendimento.
+        </p>
+
+    {% endif %}
+
+
+    <br>
+
+
+    <h3>Adicionar peça</h3>
+
+    <br>
+
+
+    <!-- FORMULÁRIO DA PEÇA -->
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'atendimentos.adicionar_peca_atendimento',
+            id=atendimento.id
+        ) }}"
+    >
+
+        <div class="form-group">
+
+            <label for="peca_id">
+                Peça
+            </label>
+
+            <select
+                id="peca_id"
+                name="peca_id"
+                required
+            >
+
+                <option value="">
+                    Selecione uma peça...
+                </option>
+
+
+                {% for peca in pecas %}
+
+                    {% if peca.quantidade > 0 %}
+
+                        <option value="{{ peca.id }}">
+
+                            {{ peca.nome }}
+                            — {{ peca.quantidade }} disponível(is)
+
+                        </option>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="quantidade">
+                Quantidade
+            </label>
+
+            <input
+                type="number"
+                id="quantidade"
+                name="quantidade"
+                min="1"
+                value="1"
+                required
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn"
+        >
+            Adicionar peça
+        </button>
+
+    </form>
+
+</div>
+
+
+<br>
+
+
+<!-- DATAS -->
+
+<div class="card">
+
+    <h2>Datas</h2>
+
+    <br>
+
+    <p>
+
+        <strong>Entrada:</strong>
+
+        {{ atendimento.data_entrada.strftime('%d/%m/%Y %H:%M') }}
+
+    </p>
+
+
+    {% if atendimento.data_saida %}
+
+    <p>
+
+        <strong>Saída:</strong>
+
+        {{ atendimento.data_saida.strftime('%d/%m/%Y %H:%M') }}
+
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

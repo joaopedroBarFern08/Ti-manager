@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>Máquinas</h3>
+
+        <strong>
+            {{ total_maquinas }}
+        </strong>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Total de atendimentos</h3>
+
+        <strong>
+            {{ total_atendimentos }}
+        </strong>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Atendimentos abertos</h3>
+
+        <strong>
+            {{ atendimentos_abertos }}
+        </strong>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Estoque baixo</h3>
+
+        <strong>
+            {{ estoque_baixo|length }}
+        </strong>
+
+    </div>
+
+</div>
+
+
+{% if estoque_baixo %}
+
+<br>
+
+<div class="card">
+
+    <h3>⚠️ Estoque baixo</h3>
+
+    <ul>
+
+        {% for peca in estoque_baixo %}
+
+        <li>
+            {{ peca.nome }}
+            — {{ peca.quantidade }} unidade(s)
+        </li>
+
+        {% endfor %}
+
+    </ul>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

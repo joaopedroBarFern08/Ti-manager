@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}
+Estoque - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Estoque
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 20px;">
+
+    <a
+        href="{{ url_for('estoque.nova_peca') }}"
+        class="btn"
+    >
+        + Nova peça
+    </a>
+
+</div>
+
+
+<div class="table-container">
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Peça</th>
+                <th>Categoria</th>
+                <th>Quantidade</th>
+                <th>Mínimo</th>
+                <th>Status</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for peca in pecas %}
+
+            <tr>
+
+                <td>
+                    {{ peca.nome }}
+                </td>
+
+                <td>
+                    {{ peca.categoria or "-" }}
+                </td>
+
+                <td>
+                    {{ peca.quantidade }}
+                </td>
+
+                <td>
+                    {{ peca.estoque_minimo }}
+                </td>
+
+                <td>
+
+                    {% if peca.quantidade == 0 %}
+
+                        <strong>
+                            Sem estoque
+                        </strong>
+
+                    {% elif peca.quantidade <= peca.estoque_minimo %}
+
+                        <strong>
+                            Estoque baixo
+                        </strong>
+
+                    {% else %}
+
+                        Normal
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+
+                <td colspan="6">
+                    Nenhuma peça cadastrada.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

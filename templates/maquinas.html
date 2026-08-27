@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}
+Máquinas - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Máquinas
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 20px;">
+
+    <a
+        href="{{ url_for('maquinas.nova_maquina') }}"
+        class="btn"
+    >
+        + Nova máquina
+    </a>
+
+</div>
+
+
+<div class="table-container">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Identificador</th>
+                <th>Modelo</th>
+                <th>Usuário</th>
+                <th>Setor</th>
+                <th>Status</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+
+            {% for maquina in maquinas %}
+
+            <tr
+            class="linha-atendimento"
+            onclick=window.location.href="{{ url_for('maquinas.detalhe_maquina', id=maquina.id) }}"
+            >
+
+                <td>
+                    {{ maquina.identificador }}
+                </td>
+
+                <td>
+                    {{ maquina.modelo or "Não informado" }}
+                </td>
+
+                <td>
+                    {{ maquina.usuario or "Não informado" }}
+                </td>
+
+                <td>
+                    {{ maquina.setor or "Não informado" }}
+                </td>
+
+                <td>
+                    {% if maquina.ativo %}
+                        Ativo
+                    {% else %}
+                        Inativo
+                    {% endif %}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+
+                <td colspan="4">
+                    Nenhuma máquina cadastrada.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+{% endblock %}
