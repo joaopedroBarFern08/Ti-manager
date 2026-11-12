@@ -62,9 +62,31 @@ const inputEstoqueMinimo = document.getElementById("estoque_minimo");
 const inputPecaId = document.getElementById("peca_id");
 
 const sugestoes = document.getElementById("sugestoes-pecas");
+const formularioPeca = document.querySelector(".form[data-editando]");
+const editandoPeca = formularioPeca?.dataset.editando === "true";
 
 let timerBusca = null;
 
+
+function exibirCategoria(categoria) {
+
+    if (!categoria) {
+        return "Sem categoria";
+    }
+
+    return categoria.charAt(0).toUpperCase() + categoria.slice(1);
+
+}
+
+
+if (
+    inputNome
+    && inputCategoria
+    && inputQuantidade
+    && inputEstoqueMinimo
+    && inputPecaId
+    && sugestoes
+) {
 
 inputNome.addEventListener("input", function () {
 
@@ -76,7 +98,9 @@ inputNome.addEventListener("input", function () {
 
     // Se apagar o nome, também esquece
     // a peça que estava selecionada
-    inputPecaId.value = "";
+    if (!editandoPeca) {
+        inputPecaId.value = "";
+    }
 
     if (termo.length < 2) {
         return;
@@ -123,7 +147,7 @@ inputNome.addEventListener("input", function () {
                         <strong>${peca.nome}</strong>
 
                         <small>
-                            ${peca.categoria || "Sem categoria"}
+                            ${exibirCategoria(peca.categoria)}
                         </small>
                     </div>
 
@@ -183,6 +207,9 @@ function preencherPeca(peca) {
 
 }
 
+}
+
+
 //função de clique geral
 document.addEventListener("click", function (event) {
 
@@ -199,4 +226,66 @@ document.addEventListener("click", function (event) {
     }
 
 });
+
+// Busca de produto para a saída avulsa de estoque
+const formularioSaida = document.querySelector("[data-peca-autocomplete]");
+
+if (formularioSaida) {
+    const nomeProduto = formularioSaida.querySelector("#peca_nome");
+    const idProduto = formularioSaida.querySelector("#peca_id");
+    const sugestoesSaida = formularioSaida.querySelector(".saida-sugestoes");
+    const produtoSelecionado = formularioSaida.querySelector(
+        ".saida-selected-product"
+    );
+    let timerBuscaSaida = null;
+
+    nomeProduto.addEventListener("input", function () {
+        const termo = nomeProduto.value.trim();
+        idProduto.value = "";
+        produtoSelecionado.textContent = "Nenhum produto selecionado.";
+        sugestoesSaida.innerHTML = "";
+        clearTimeout(timerBuscaSaida);
+
+        if (termo.length < 2) {
+            return;
+        }
+
+        timerBuscaSaida = setTimeout(function () {
+            fetch(`/api/pecas/buscar?q=${encodeURIComponent(termo)}`)
+                .then(response => response.ok ? response.json() : [])
+                .then(pecas => {
+                    sugestoesSaida.innerHTML = "";
+
+                    pecas.forEach(function (peca) {
+                        const item = document.createElement("button");
+                        item.type = "button";
+                        item.className = "saida-sugestao-item";
+                        item.innerHTML = `<span><strong>${peca.nome}</strong><small>${exibirCategoria(peca.categoria)}</small></span><b>${peca.quantidade} disponível(is)</b>`;
+
+                        item.addEventListener("click", function () {
+                            nomeProduto.value = peca.nome;
+                            idProduto.value = peca.id;
+                            produtoSelecionado.textContent =
+                                `${peca.quantidade} unidade(s) disponível(is) em estoque.`;
+                            sugestoesSaida.innerHTML = "";
+                        });
+
+                        sugestoesSaida.appendChild(item);
+                    });
+                })
+                .catch(() => {
+                    sugestoesSaida.innerHTML = "";
+                });
+        }, 250);
+    });
+
+    formularioSaida.addEventListener("submit", function (event) {
+        if (!idProduto.value) {
+            event.preventDefault();
+            produtoSelecionado.textContent =
+                "Selecione um produto em uma das sugestões.";
+            nomeProduto.focus();
+        }
+    });
+}
 

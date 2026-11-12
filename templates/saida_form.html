@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Saída de Estoque - TI Manager{% endblock %}
+{% block page_title %}Saída de Estoque{% endblock %}
+
+{% block content %}
+<div class="saida-page">
+    <section class="saida-intro">
+        <div class="saida-intro-icon">↗</div>
+        <div>
+            <span class="saida-eyebrow">Movimentação avulsa</span>
+            <h2>Registrar saída de produto</h2>
+            <p>Selecione o produto, informe quem o recebeu e a quantidade entregue.</p>
+        </div>
+    </section>
+
+    <form method="POST" class="form saida-form" data-peca-autocomplete>
+        <div class="saida-form-heading">
+            <span>Dados da entrega</span>
+            <small>A data e o horário são registrados automaticamente.</small>
+        </div>
+
+        <div class="form-group saida-product-field">
+            <label for="peca_nome">Produto</label>
+            <input type="text" id="peca_nome" name="peca_nome" placeholder="Comece a digitar o nome do produto..." autocomplete="off" required>
+            <input type="hidden" id="peca_id" name="peca_id">
+            <div class="saida-sugestoes" aria-live="polite"></div>
+            <small class="saida-selected-product">Nenhum produto selecionado.</small>
+        </div>
+
+        <div class="saida-fields-row">
+            <div class="form-group">
+                <label for="destinatario">Entregue para</label>
+                <input type="text" id="destinatario" name="destinatario" placeholder="Nome da pessoa ou setor" maxlength="100" required>
+            </div>
+            <div class="form-group saida-quantity-field">
+                <label for="quantidade">Quantidade</label>
+                <input type="number" id="quantidade" name="quantidade" min="1" value="1" required>
+            </div>
+        </div>
+
+        <div class="saida-form-footer">
+            <small>O saldo do produto será reduzido ao confirmar a entrega.</small>
+            <button type="submit" class="btn">Confirmar saída</button>
+        </div>
+    </form>
+
+    <section class="saida-history">
+        <div class="saida-history-heading">
+            <div>
+                <span class="saida-eyebrow">Registros recentes</span>
+                <h2>Histórico de movimentações</h2>
+            </div>
+            <span>{{ movimentacoes|length }} registro(s)</span>
+        </div>
+
+        {% if movimentacoes %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Movimentação</th>
+                        <th>Entregue para/por</th>
+                        <th>Quantidade</th>
+                        <th>Data da saída</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movimentacao in movimentacoes %}
+                    <tr>
+                        <td><strong>{{ movimentacao.peca.nome }}</strong></td>
+                        <td>
+                            {% if movimentacao.tipo == "entrada" %}
+                                <span class="movimentacao-badge movimentacao-entrada">Devolução</span>
+                            {% else %}
+                                <span class="movimentacao-badge movimentacao-saida">Saída</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if movimentacao.destinatario %}
+                                {{ movimentacao.destinatario }}
+                            {% elif movimentacao.atendimento_id %}
+                                <a class="saida-attendance-link" href="{{ url_for('atendimentos.detalhe_atendimento', id=movimentacao.atendimento_id) }}">Atendimento #{{ movimentacao.atendimento_id }}</a>
+                            {% else %}
+                                {{ movimentacao.motivo or "Não informado" }}
+                            {% endif %}
+                        </td>
+                        <td>{{ movimentacao.quantidade }} un.</td>
+                        <td>{{ movimentacao.data.strftime('%d/%m/%Y %H:%M') if movimentacao.data else "—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="saida-history-empty">
+            <span>↗</span>
+            <div><strong>Nenhuma movimentação registrada</strong><p>As entregas e devoluções aparecerão aqui.</p></div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

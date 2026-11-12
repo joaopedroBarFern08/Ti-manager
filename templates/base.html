@@ -14,26 +14,55 @@
 
     <aside class="sidebar">
 
-        <div class="logo">
-            TI Manager
+        <div class="brand">
+            <div class="stat-icon">
+                <img
+                    src="{{ url_for('static', filename='images/abra-o-laptop.png') }}"
+                    alt=""
+                >
+            </div>
+
+            <div class="logo">
+                TI Manager
+                <small>Gestão de Hardware</small>
+            </div>
         </div>
 
         <nav>
 
-            <a href="{{ url_for('dashboard.dashboard') }}">
+            <a
+                href="{{ url_for('dashboard.dashboard') }}"
+                class="{% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}"
+            >
                 Dashboard
             </a>
 
-            <a href="{{ url_for('atendimentos.atendimentos') }}">
+            <a
+                href="{{ url_for('atendimentos.atendimentos') }}"
+                class="{% if request.endpoint.startswith('atendimentos.') %}active{% endif %}"
+            >
                 Atendimentos
             </a>
 
-            <a href="{{ url_for('maquinas.maquinas') }}">
+            <a
+                href="{{ url_for('maquinas.maquinas') }}"
+                class="{% if request.endpoint.startswith('maquinas.') %}active{% endif %}"
+            >
                 Máquinas
             </a>
 
-            <a href="{{ url_for('estoque.estoque') }}">
+            <a
+                href="{{ url_for('estoque.estoque') }}"
+                class="{% if request.endpoint == 'estoque.estoque' %}active{% endif %}"
+            >
                 Estoque
+            </a>
+
+            <a
+                href="{{ url_for('estoque.saida') }}"
+                class="{% if request.endpoint == 'estoque.saida' %}active{% endif %}"
+            >
+                Saída
             </a>
 
         </nav>
@@ -49,10 +78,26 @@
                 {% block page_title %}{% endblock %}
             </h1>
 
+            <div class="topbar-actions">
+                {% block header_actions %}{% endblock %}
+            </div>
+
         </header>
 
 
         <section class="content">
+
+            {% with mensagens = get_flashed_messages(with_categories=true) %}
+
+                {% for categoria, mensagem in mensagens %}
+
+                    <div class="flash-message flash-{{ categoria }}">
+                        {{ mensagem }}
+                    </div>
+
+                {% endfor %}
+
+            {% endwith %}
 
             {% block content %}
             {% endblock %}

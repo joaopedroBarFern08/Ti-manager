@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datetime import datetime
 
 from database import db
+from navegacao import obter_proxima_url
 from models import (
     Maquina,
     Atendimento,
@@ -11,32 +12,6 @@ from models import (
 )
 
 atendimentos_bp = Blueprint("atendimentos", __name__)
-
-
-def interpretar_identificador(identificador):
-
-    partes = identificador.strip().upper().split("-")
-
-    if len(partes) != 3:
-        return None
-
-    patrimonio, empresa, tipo_codigo = partes
-
-    tipos = {
-        "N": "notebook",
-        "D": "desktop"
-    }
-
-    tipo = tipos.get(tipo_codigo)
-
-    if not tipo:
-        return None
-
-    return {
-        "patrimonio": patrimonio,
-        "empresa": empresa,
-        "tipo": tipo
-    }
 
 
 @atendimentos_bp.route("/atendimentos")
@@ -55,41 +30,33 @@ def atendimentos():
 @atendimentos_bp.route("/atendimentos/novo", methods=["GET", "POST"])
 def novo_atendimento():
 
+    proximo = obter_proxima_url()
+
     if request.method == "POST":
 
-        identificador = request.form[
-            "identificador"
+        patrimonio = request.form[
+            "patrimonio"
         ].strip().upper()
 
         problema = request.form[
             "problema_relatado"
         ].strip()
 
-        dados = interpretar_identificador(
-            identificador
-        )
-
-        if not dados:
+        if not patrimonio:
             return render_template(
                 "atendimento_form.html",
-                erro=(
-                    "Identificador inválido. "
-                    "Use o formato "
-                    "000000-EMP-N ou 000000-EMP-D."
-                )
+                erro="Informe o patrimônio da máquina.",
+                proximo=proximo
             )
 
         maquina = Maquina.query.filter_by(
-            patrimonio=dados["patrimonio"],
-            empresa=dados["empresa"]
+            patrimonio=patrimonio
         ).first()
 
         if not maquina:
 
             maquina = Maquina(
-                patrimonio=dados["patrimonio"],
-                empresa=dados["empresa"],
-                tipo=dados["tipo"]
+                patrimonio=patrimonio
             )
 
             db.session.add(maquina)
@@ -109,7 +76,8 @@ def novo_atendimento():
         )
 
     return render_template(
-        "atendimento_form.html"
+        "atendimento_form.html",
+        proximo=proximo
     )
 
 @atendimentos_bp.route(
@@ -156,7 +124,9 @@ def detalhe_atendimento(id):
             )
         )
 
-    pecas = Peca.query.order_by(
+    pecas = Peca.query.filter_by(
+        categoria="reparo"
+    ).order_by(
         Peca.nome
     ).all()
 
@@ -214,6 +184,20 @@ def adicionar_peca_atendimento(id):
         Peca,
         peca_id
     )
+
+    if peca.categoria != "reparo":
+
+        flash(
+            "Somente peças da categoria Reparo podem ser usadas em atendimentos.",
+            "error"
+        )
+
+        return redirect(
+            url_for(
+                "atendimentos.detalhe_atendimento",
+                id=id
+            )
+        )
 
     if peca.quantidade < quantidade:
 

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from database import db
 from models import Maquina
+from navegacao import obter_proxima_url
 
 maquinas_bp = Blueprint("maquinas", __name__)
 
@@ -24,6 +25,19 @@ def detalhe_maquina(id):
     maquina = Maquina.query.get_or_404(id)
 
     if request.method == "POST":
+
+        empresa = request.form.get("empresa", "").strip().upper()
+        tipo = request.form.get("tipo", "")
+
+        if not empresa or tipo not in {"notebook", "desktop"}:
+            flash(
+                "Preencha a empresa e selecione o tipo da máquina.",
+                "error"
+            )
+            return redirect(url_for("maquinas.detalhe_maquina", id=id))
+
+        maquina.empresa = empresa
+        maquina.tipo = tipo
 
         maquina.modelo = request.form.get(
             "modelo", ""
@@ -59,6 +73,8 @@ def detalhe_maquina(id):
 @maquinas_bp.route("/maquinas/nova", methods=["GET", "POST"])
 def nova_maquina():
 
+    proximo = obter_proxima_url()
+
     if request.method == "POST":
 
         patrimonio = request.form["patrimonio"].strip()
@@ -82,4 +98,4 @@ def nova_maquina():
 
         return redirect(url_for("maquinas.maquinas"))
 
-    return render_template("maquina_form.html")
+    return render_template("maquina_form.html", proximo=proximo)

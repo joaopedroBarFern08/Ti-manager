@@ -14,12 +14,12 @@ class Maquina(db.Model):
 
     empresa = db.Column(
         db.String(20),
-        nullable=False
+        nullable=True
     )
 
     tipo = db.Column(
-        db.String(1),
-        nullable=False
+        db.String(20),
+        nullable=True
     )
 
     modelo = db.Column(
@@ -48,6 +48,9 @@ class Maquina(db.Model):
 
     @property
     def identificador(self):
+        if not self.empresa or not self.tipo:
+            return self.patrimonio
+
         tipo = {
             "notebook": "N",
             "desktop": "D"
@@ -99,6 +102,12 @@ class Atendimento(db.Model):
 
 class Peca(db.Model):
     __tablename__ = "pecas"
+    __table_args__ = (
+        db.CheckConstraint(
+            "categoria IN ('novo', 'reparo', 'ferramenta')",
+            name="ck_pecas_categoria_valida"
+        ),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -108,7 +117,9 @@ class Peca(db.Model):
     )
 
     categoria = db.Column(
-        db.String(100)
+        db.String(20),
+        nullable=False,
+        default="novo"
     )
 
     quantidade = db.Column(
@@ -186,6 +197,10 @@ class MovimentacaoEstoque(db.Model):
 
     motivo = db.Column(
         db.String(255)
+    )
+
+    destinatario = db.Column(
+        db.String(100)
     )
 
     atendimento_id = db.Column(

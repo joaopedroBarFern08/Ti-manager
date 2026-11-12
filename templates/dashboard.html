@@ -1,86 +1,111 @@
 {% extends "base.html" %}
 
-{% block title %}
-Dashboard - TI Manager
-{% endblock %}
-
-{% block page_title %}
-Dashboard
-{% endblock %}
+{% block title %}Dashboard - TI Manager{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
+<div class="dashboard">
+    <section class="dashboard-hero">
+        <div>
+            <span class="dashboard-eyebrow">PAINEL DE CONTROLE</span>
+            <h2>Visão geral da operação</h2>
+            <p>Acompanhe os atendimentos, os equipamentos e o estoque em um só lugar.</p>
+        </div>
 
-<div class="cards">
+        <a href="{{ url_for('atendimentos.novo_atendimento', proximo=url_for('dashboard.dashboard')) }}" class="dashboard-primary-action">
+            <span>+</span> Novo atendimento
+        </a>
+    </section>
 
-    <div class="card">
+    <section class="dashboard-stats">
+        <article class="dashboard-stat stat-blue">
+            <div class="stat-icon">
+                <img
+                    src="{{ url_for('static', filename='images/abra-o-laptop.png') }}"
+                    alt=""
+                >
+            </div>
+            <div><span>Máquinas ativas</span><strong>{{ total_maquinas }}</strong></div>
+        </article>
 
-        <h3>Máquinas</h3>
+        <article class="dashboard-stat stat-violet">
+            <div class="stat-icon">▤</div>
+            <div><span>Total de atendimentos</span><strong>{{ total_atendimentos }}</strong></div>
+        </article>
 
-        <strong>
-            {{ total_maquinas }}
-        </strong>
+        <article class="dashboard-stat stat-orange">
+            <div class="stat-icon">◷</div>
+            <div><span>Atendimentos abertos</span><strong>{{ atendimentos_abertos }}</strong></div>
+        </article>
 
-    </div>
+        <article class="dashboard-stat stat-red">
+            <div class="stat-icon">!</div>
+            <div><span>Itens com estoque baixo</span><strong>{{ estoque_baixo|length }}</strong></div>
+        </article>
+    </section>
 
+    <section class="dashboard-grid">
+        <article class="dashboard-panel stock-panel">
+            <div class="dashboard-panel-heading">
+                <div>
+                    <span class="dashboard-panel-label">ESTOQUE</span>
+                    <h2>Itens que precisam de atenção</h2>
+                </div>
+                <a href="{{ url_for('estoque.estoque') }}">Ver estoque →</a>
+            </div>
 
-    <div class="card">
+            {% if estoque_baixo %}
+                <div class="stock-alert-list">
+                    {% for peca in estoque_baixo %}
+                        <a
+                            href="{{ url_for('estoque.editar_peca', id=peca.id) }}"
+                            class="stock-alert-item"
+                        >
+                            <span class="stock-alert-symbol">!</span>
+                            <span class="stock-alert-name">{{ peca.nome }}</span>
+                            <span class="stock-alert-quantity">{{ peca.quantidade }} em estoque</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="dashboard-empty-state">
+                    <span>✓</span>
+                    <div>
+                        <strong>Estoque em dia</strong>
+                        <p>Nenhum item está abaixo do estoque mínimo.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </article>
 
-        <h3>Total de atendimentos</h3>
+        <article class="dashboard-panel quick-actions-panel">
+            <div class="dashboard-panel-heading">
+                <div>
+                    <span class="dashboard-panel-label">ATALHOS</span>
+                    <h2>Ações rápidas</h2>
+                </div>
+            </div>
 
-        <strong>
-            {{ total_atendimentos }}
-        </strong>
+            <div class="quick-actions">
+                <a href="{{ url_for('atendimentos.novo_atendimento', proximo=url_for('dashboard.dashboard')) }}">
+                    <span class="quick-action-icon quick-violet">+</span>
+                    <span><strong>Novo atendimento</strong><small>Registrar uma solicitação</small></span>
+                    <b>→</b>
+                </a>
 
-    </div>
+                <a href="{{ url_for('maquinas.nova_maquina', proximo=url_for('dashboard.dashboard')) }}">
+                    <span class="quick-action-icon quick-blue">+</span>
+                    <span><strong>Nova máquina</strong><small>Cadastrar equipamento</small></span>
+                    <b>→</b>
+                </a>
 
-
-    <div class="card">
-
-        <h3>Atendimentos abertos</h3>
-
-        <strong>
-            {{ atendimentos_abertos }}
-        </strong>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3>Estoque baixo</h3>
-
-        <strong>
-            {{ estoque_baixo|length }}
-        </strong>
-
-    </div>
-
+                <a href="{{ url_for('estoque.nova_peca', proximo=url_for('dashboard.dashboard')) }}">
+                    <span class="quick-action-icon quick-orange">+</span>
+                    <span><strong>Novo Item</strong><small>Atualizar o inventário</small></span>
+                    <b>→</b>
+                </a>
+            </div>
+        </article>
+    </section>
 </div>
-
-
-{% if estoque_baixo %}
-
-<br>
-
-<div class="card">
-
-    <h3>⚠️ Estoque baixo</h3>
-
-    <ul>
-
-        {% for peca in estoque_baixo %}
-
-        <li>
-            {{ peca.nome }}
-            — {{ peca.quantidade }} unidade(s)
-        </li>
-
-        {% endfor %}
-
-    </ul>
-
-</div>
-
-{% endif %}
-
 {% endblock %}

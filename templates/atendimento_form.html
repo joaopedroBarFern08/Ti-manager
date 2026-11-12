@@ -1,74 +1,16 @@
 {% extends "base.html" %}
-
-{% block title %}
-Novo Atendimento - TI Manager
-{% endblock %}
-
-{% block page_title %}
-Novo Atendimento
-{% endblock %}
-
+{% block title %}Novo Atendimento - TI Manager{% endblock %}
+{% block page_title %}Novo Atendimento{% endblock %}
+{% block header_actions %}<a href="{{ proximo or url_for('atendimentos.atendimentos') }}" class="btn btn-secondary">Voltar</a>{% endblock %}
 {% block content %}
-
-<form
-    method="POST"
-    class="form"
->
-
-    {% if erro %}
-
-        <div class="alert-error">
-            {{ erro }}
-        </div>
-
-    {% endif %}
-
-
-    <div class="form-group">
-
-        <label for="identificador">
-            Identificador da máquina
-        </label>
-
-        <input
-            type="text"
-            id="identificador"
-            name="identificador"
-            placeholder="Ex: 025618-EMP-N"
-            maxlength="30"
-            required
-        >
-
-        <small>
-            Formato: patrimônio-empresa-tipo
-        </small>
-
-    </div>
-
-
-    <div class="form-group">
-
-        <label for="problema_relatado">
-            Problema relatado
-        </label>
-
-        <textarea
-            id="problema_relatado"
-            name="problema_relatado"
-            placeholder="Descreva o problema informado pelo usuário..."
-            required
-        ></textarea>
-
-    </div>
-
-
-    <button
-        type="submit"
-        class="btn"
-    >
-        Registrar atendimento
-    </button>
-
-</form>
-
+<div class="atendimento-create-page">
+    <section class="atendimento-create-intro"><span class="atendimento-eyebrow">Abertura de chamado</span><h2>Registre o atendimento</h2><p>Informe a máquina e o relato inicial. Os dados técnicos poderão ser preenchidos durante o atendimento.</p></section>
+    <form method="POST" class="form atendimento-create-form">
+        {% if proximo %}<input type="hidden" name="proximo" value="{{ proximo }}">{% endif %}
+        {% if erro %}<div class="alert-error">{{ erro }}</div>{% endif %}
+        <div class="form-group"><label for="patrimonio">Patrimônio da máquina</label><input type="text" id="patrimonio" name="patrimonio" placeholder="Ex.: 025618" maxlength="20" required><small>Informe apenas o número de patrimônio. Empresa e tipo podem ser preenchidos depois, no cadastro da máquina.</small></div>
+        <div class="form-group form-group-last"><label for="problema_relatado">Problema relatado</label><textarea id="problema_relatado" name="problema_relatado" placeholder="Descreva o problema informado pelo usuário..." required></textarea></div>
+        <div class="atendimento-form-footer"><small>O atendimento será criado com o status “Recebido”.</small><button type="submit" class="btn">Registrar atendimento</button></div>
+    </form>
+</div>
 {% endblock %}

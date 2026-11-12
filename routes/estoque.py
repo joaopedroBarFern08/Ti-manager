@@ -1,9 +1,18 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from database import db
-from models import Peca
+from models import MovimentacaoEstoque, Peca
+from navegacao import obter_proxima_url
 
 estoque_bp = Blueprint("estoque", __name__)
+CATEGORIAS_PERMITIDAS = ("novo", "reparo", "ferramenta")
+
+
+def url_formulario_peca(proximo):
+    if proximo:
+        return url_for("estoque.nova_peca", proximo=proximo)
+
+    return url_for("estoque.nova_peca")
 
 
 @estoque_bp.route("/estoque")
@@ -22,10 +31,12 @@ def estoque():
 @estoque_bp.route("/pecas/nova", methods=["GET", "POST"])
 def nova_peca():
 
+    proximo = obter_proxima_url()
+
     if request.method == "POST":
     
         nome = request.form.get("nome", "").strip()
-        categoria = request.form.get("categoria", "").strip()
+        categoria = request.form.get("categoria", "").strip().lower()
 
         peca_id = request.form.get("peca_id")
 
@@ -46,14 +57,11 @@ def nova_peca():
             )
 
             return redirect(
-                url_for("estoque.nova_peca")
+                url_formulario_peca(proximo)
             )
 
 
         nome = " ".join(nome.split())
-        categoria = " ".join(categoria.split())
-
-
         if not nome:
 
             flash(
@@ -62,7 +70,18 @@ def nova_peca():
             )
 
             return redirect(
-                url_for("estoque.nova_peca")
+                url_formulario_peca(proximo)
+            )
+
+        if categoria not in CATEGORIAS_PERMITIDAS:
+
+            flash(
+                "Selecione uma categoria válida.",
+                "error"
+            )
+
+            return redirect(
+                url_formulario_peca(proximo)
             )
 
 
@@ -74,7 +93,7 @@ def nova_peca():
             )
 
             return redirect(
-                url_for("estoque.nova_peca")
+                url_formulario_peca(proximo)
             )
 
 
@@ -86,7 +105,7 @@ def nova_peca():
             )
 
             return redirect(
-                url_for("estoque.nova_peca")
+                url_formulario_peca(proximo)
             )
 
 
@@ -108,7 +127,7 @@ def nova_peca():
                 )
 
                 return redirect(
-                    url_for("estoque.nova_peca")
+                    url_formulario_peca(proximo)
                 )
 
 
@@ -126,7 +145,7 @@ def nova_peca():
             )
 
             return redirect(
-                url_for("estoque.estoque")
+                proximo or url_for("estoque.estoque")
             )
 
 
@@ -148,7 +167,7 @@ def nova_peca():
             )
 
             return redirect(
-                url_for("estoque.nova_peca")
+                url_formulario_peca(proximo)
             )
 
 
@@ -171,10 +190,85 @@ def nova_peca():
 
 
         return redirect(
-            url_for("estoque.estoque")
+            proximo or url_for("estoque.estoque")
         )
 
 
     return render_template(
-        "peca_form.html"
+        "peca_form.html",
+        proximo=proximo
+    )
+
+
+@estoque_bp.route("/saida", methods=["GET", "POST"])
+def saida():
+    if request.method == "POST":
+        peca_id = request.form.get("peca_id", type=int)
+        destinatario = " ".join(request.form.get("destinatario", "").split())
+
+        try:
+            quantidade = int(request.form.get("quantidade", ""))
+        except (TypeError, ValueError):
+            quantidade = 0
+
+        if not peca_id:
+            flash("Selecione um produto da lista de sugestões.", "error")
+            return redirect(url_for("estoque.saida"))
+
+        if not destinatario:
+            flash("Informe para quem o produto foi entregue.", "error")
+            return redirect(url_for("estoque.saida"))
+
+        if quantidade <= 0:
+            flash("Informe uma quantidade maior que zero.", "error")
+            return redirect(url_for("estoque.saida"))
+
+        peca = db.session.get(Peca, peca_id)
+
+        if not peca:
+            flash("Produto não encontrado.", "error")
+            return redirect(url_for("estoque.saida"))
+
+        if quantidade > peca.quantidade:
+            flash(
+                f"Estoque insuficiente. Disponível: {peca.quantidade} unidade(s).",
+                "error"
+            )
+            return redirect(url_for("estoque.saida"))
+
+        peca.quantidade -= quantidade
+        db.session.add(MovimentacaoEstoque(
+            peca_id=peca.id,
+            tipo="saida",
+            quantidade=quantidade,
+            motivo="Saída avulsa",
+            destinatario=destinatario,
+        ))
+        db.session.commit()
+
+        flash(
+            f"Saída de {quantidade} unidade(s) de {peca.nome} registrada.",
+            "success"
+        )
+        return redirect(url_for("estoque.saida"))
+
+    movimentacoes = MovimentacaoEstoque.query.order_by(
+        MovimentacaoEstoque.data.desc()
+    ).all()
+
+    return render_template(
+        "saida_form.html",
+        movimentacoes=movimentacoes
+    )
+
+
+@estoque_bp.route("/pecas/<int:id>")
+def editar_peca(id):
+
+    peca = db.get_or_404(Peca, id)
+
+    return render_template(
+        "peca_form.html",
+        peca=peca,
+        proximo=None
     )

@@ -16,7 +16,7 @@ Estoque
         href="{{ url_for('estoque.nova_peca') }}"
         class="btn"
     >
-        + Nova peça
+        + Novo Item
     </a>
 
 </div>
@@ -29,7 +29,7 @@ Estoque
         <thead>
 
             <tr>
-                <th>Peça</th>
+                <th>Item</th>
                 <th>Categoria</th>
                 <th>Quantidade</th>
                 <th>Mínimo</th>
@@ -43,14 +43,20 @@ Estoque
 
             {% for peca in pecas %}
 
-            <tr>
+            <tr
+                class="linha-atendimento"
+                onclick="window.location.href='{{ url_for(
+                    'estoque.editar_peca',
+                    id=peca.id
+                ) }}'"
+            >
 
                 <td>
                     {{ peca.nome }}
                 </td>
 
                 <td>
-                    {{ peca.categoria or "-" }}
+                    {{ peca.categoria|capitalize if peca.categoria else "-" }}
                 </td>
 
                 <td>
@@ -65,13 +71,13 @@ Estoque
 
                     {% if peca.quantidade == 0 %}
 
-                        <strong>
+                        <strong class="estoque-empty">
                             Sem estoque
                         </strong>
 
                     {% elif peca.quantidade <= peca.estoque_minimo %}
 
-                        <strong>
+                        <strong class="estoque-low">
                             Estoque baixo
                         </strong>
 

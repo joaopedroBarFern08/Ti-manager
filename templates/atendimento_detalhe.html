@@ -1,398 +1,69 @@
 {% extends "base.html" %}
-
-{% block title %}
-Atendimento #{{ atendimento.id }} - TI Manager
+{% block title %}Atendimento #{{ atendimento.id }} - TI Manager{% endblock %}
+{% block page_title %}Atendimento #{{ atendimento.id }}{% endblock %}
+{% block header_actions %}
+<div class="atendimento-header-actions">
+    <a href="{{ url_for('atendimentos.atendimentos') }}" class="btn btn-secondary">Voltar</a>
+    <button type="submit" form="atendimento-form" class="btn">Salvar alterações</button>
+</div>
 {% endblock %}
-
-{% block page_title %}
-Atendimento #{{ atendimento.id }}
-{% endblock %}
-
 {% block content %}
-
-<div class="card">
-
-    <h2>Informações da máquina</h2>
-
-    <br>
-
-    <p>
-        <strong>Identificador:</strong>
-        {{ atendimento.maquina.identificador }}
-    </p>
-
-    <p>
-        <strong>Modelo:</strong>
-
-        {% if atendimento.maquina.modelo %}
-            {{ atendimento.maquina.modelo }}
-        {% else %}
-            Não informado
-        {% endif %}
-    </p>
-
-    <p>
-        <strong>Usuário:</strong>
-        {{ atendimento.maquina.usuario or "Não informado" }}
-    </p>
-
-    <p>
-        <strong>Setor:</strong>
-        {{ atendimento.maquina.setor or "Não informado" }}
-    </p>
-
-</div>
-
-
-<br>
-
-
-<div class="card">
-
-    <h2>Problema relatado</h2>
-
-    <br>
-
-    <p>
-        {{ atendimento.problema_relatado }}
-    </p>
-
-</div>
-
-
-<br>
-
-
-<!-- FORMULÁRIO DO ATENDIMENTO -->
-
-<form
-    method="POST"
-    class="form"
->
-
-    <div class="form-group">
-
-        <label for="diagnostico">
-            Diagnóstico
-        </label>
-
-        <textarea
-            id="diagnostico"
-            name="diagnostico"
-            placeholder="Descreva o diagnóstico encontrado..."
-        >{{ atendimento.diagnostico or "" }}</textarea>
-
-    </div>
-
-
-    <div class="form-group">
-
-        <label for="solucao">
-            Solução aplicada
-        </label>
-
-        <textarea
-            id="solucao"
-            name="solucao"
-            placeholder="Descreva o que foi feito para solucionar o problema..."
-        >{{ atendimento.solucao or "" }}</textarea>
-
-    </div>
-
-
-    <div class="form-group">
-
-        <label for="status">
-            Status
-        </label>
-
-        <select
-            id="status"
-            name="status"
-        >
-
-            <option
-                value="Recebido"
-                {% if atendimento.status == "Recebido" %}selected{% endif %}
-            >
-                Recebido
-            </option>
-
-            <option
-                value="Em diagnóstico"
-                {% if atendimento.status == "Em diagnóstico" %}selected{% endif %}
-            >
-                Em diagnóstico
-            </option>
-
-            <option
-                value="Aguardando peça"
-                {% if atendimento.status == "Aguardando peça" %}selected{% endif %}
-            >
-                Aguardando peça
-            </option>
-
-            <option
-                value="Em manutenção"
-                {% if atendimento.status == "Em manutenção" %}selected{% endif %}
-            >
-                Em manutenção
-            </option>
-
-            <option
-                value="Finalizado"
-                {% if atendimento.status == "Finalizado" %}selected{% endif %}
-            >
-                Finalizado
-            </option>
-
-        </select>
-
-    </div>
-
-
-    <button
-        type="submit"
-        class="btn"
-    >
-        Salvar alterações
-    </button>
-
-</form>
-
-
-<br>
-
-
-<!-- PEÇAS UTILIZADAS -->
-
-<div class="card">
-
-    <h2>Peças utilizadas</h2>
-
-    <br>
-
-
-    {% if atendimento.pecas %}
-
-        <div class="table-container">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-                        <th>Peça</th>
-                        <th>Quantidade</th>
-                        <th>Ações</th>
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for item in atendimento.pecas %}
-
-                    <tr>
-
-                        <td>
-                            {{ item.peca.nome }}
-                        </td>
-
-                        <td>
-
-                            {{ item.quantidade }}
-
-                        </td>
-
-                        <td>
-
-                            <form
-                                method="POST"
-                                action="{{ url_for(
-                                    'atendimentos.devolver_peca_atendimento',
-                                    id=atendimento.id,
-                                    item_id=item.id
-                                ) }}"
-                                class="devolver-form"
-                            >
-
-                                <div class="quantidade-devolucao">
-
-                                    <button
-                                        type="button"
-                                        class="btn-qtd"
-                                        data-acao="diminuir"
-                                    >
-                                        −
-                                    </button>
-
-                                    <input
-                                        type="number"
-                                        name="quantidade"
-                                        value="1"
-                                        min="1"
-                                        max="{{ item.quantidade }}"
-                                        readonly
-                                    >
-
-                                    <button
-                                        type="button"
-                                        class="btn-qtd"
-                                        data-acao="aumentar"
-                                    >
-                                        +
-                                    </button>
-
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    class="btn-devolver"
-                                >
-                                    Devolver
-                                </button>
-
-                            </form>
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
+<div class="atendimento-page">
+    <section class="atendimento-hero">
+        <div><span class="atendimento-eyebrow">Chamado #{{ atendimento.id }}</span><h2>{{ atendimento.maquina.identificador }}</h2><p>{{ atendimento.problema_relatado }}</p></div>
+        <div class="atendimento-status"><span>Status atual</span><strong>{{ atendimento.status }}</strong></div>
+    </section>
+    <div class="atendimento-layout">
+        <aside class="atendimento-sidebar">
+            <section class="atendimento-panel atendimento-machine-card">
+                <span class="panel-eyebrow">Equipamento</span><h2>Dados da máquina</h2>
+                <dl class="atendimento-meta-list">
+                    <div><dt>Patrimônio</dt><dd>{{ atendimento.maquina.identificador }}</dd></div>
+                    <div><dt>Modelo</dt><dd>{{ atendimento.maquina.modelo or "Não informado" }}</dd></div>
+                    <div><dt>Usuário</dt><dd>{{ atendimento.maquina.usuario or "Não informado" }}</dd></div>
+                    <div><dt>Setor</dt><dd>{{ atendimento.maquina.setor or "Não informado" }}</dd></div>
+                </dl>
+            </section>
+            <section class="atendimento-panel atendimento-dates-card">
+                <span class="panel-eyebrow">Cronologia</span><h2>Datas</h2>
+                <dl class="atendimento-meta-list">
+                    <div><dt>Entrada</dt><dd>{{ atendimento.data_entrada.strftime('%d/%m/%Y às %H:%M') }}</dd></div>
+                    {% if atendimento.data_saida %}<div><dt>Saída</dt><dd>{{ atendimento.data_saida.strftime('%d/%m/%Y às %H:%M') }}</dd></div>{% endif %}
+                </dl>
+            </section>
+        </aside>
+        <div class="atendimento-main-content">
+            <form method="POST" id="atendimento-form" class="atendimento-panel atendimento-work-form">
+                <div class="atendimento-panel-heading">
+                    <div><span class="panel-eyebrow">Registro técnico</span><h2>Diagnóstico e solução</h2></div>
+                    <div class="form-group status-field"><label for="status">Status</label><select id="status" name="status">
+                        <option value="Recebido" {% if atendimento.status == "Recebido" %}selected{% endif %}>Recebido</option>
+                        <option value="Em diagnóstico" {% if atendimento.status == "Em diagnóstico" %}selected{% endif %}>Em diagnóstico</option>
+                        <option value="Aguardando peça" {% if atendimento.status == "Aguardando peça" %}selected{% endif %}>Aguardando peça</option>
+                        <option value="Em manutenção" {% if atendimento.status == "Em manutenção" %}selected{% endif %}>Em manutenção</option>
+                        <option value="Finalizado" {% if atendimento.status == "Finalizado" %}selected{% endif %}>Finalizado</option>
+                    </select></div>
+                </div>
+                <div class="form-group"><label for="diagnostico">Diagnóstico</label><textarea id="diagnostico" name="diagnostico" placeholder="Descreva o diagnóstico encontrado...">{{ atendimento.diagnostico or "" }}</textarea></div>
+                <div class="form-group form-group-last"><label for="solucao">Solução aplicada</label><textarea id="solucao" name="solucao" placeholder="Descreva o que foi feito para solucionar o problema...">{{ atendimento.solucao or "" }}</textarea></div>
+                <div class="atendimento-form-footer"><small>As alterações são salvas pelo botão no topo da página.</small><button type="submit" class="btn atendimento-save-bottom">Salvar alterações</button></div>
+            </form>
+            <section class="atendimento-panel atendimento-parts-panel">
+                <div class="atendimento-panel-heading"><div><span class="panel-eyebrow">Estoque vinculado</span><h2>Peças utilizadas</h2></div><a href="{{ url_for('estoque.nova_peca', proximo=url_for('atendimentos.detalhe_atendimento', id=atendimento.id)) }}" class="text-action">+ Cadastrar peça</a></div>
+                {% if atendimento.pecas %}
+                <div class="table-container atendimento-parts-table"><table><thead><tr><th>Peça</th><th>Quantidade</th><th>Devolução</th></tr></thead><tbody>
+                    {% for item in atendimento.pecas %}<tr><td><strong>{{ item.peca.nome }}</strong></td><td>{{ item.quantidade }} un.</td><td>
+                        <form method="POST" action="{{ url_for('atendimentos.devolver_peca_atendimento', id=atendimento.id, item_id=item.id) }}" class="devolver-form"><div class="quantidade-devolucao"><button type="button" class="btn-qtd" data-acao="diminuir" aria-label="Diminuir quantidade">−</button><input type="number" name="quantidade" value="1" min="1" max="{{ item.quantidade }}" readonly><button type="button" class="btn-qtd" data-acao="aumentar" aria-label="Aumentar quantidade">+</button></div><button type="submit" class="btn-devolver">Devolver</button></form>
+                    </td></tr>{% endfor %}
+                </tbody></table></div>
+                {% else %}<div class="atendimento-empty-state"><span>+</span><p>Nenhuma peça foi utilizada neste atendimento.</p></div>{% endif %}
+                <form method="POST" action="{{ url_for('atendimentos.adicionar_peca_atendimento', id=atendimento.id) }}" class="atendimento-add-part-form">
+                    <div class="atendimento-add-part-title"><h3>Adicionar peça</h3><p>Somente produtos da categoria Reparo podem ser vinculados ao atendimento.</p></div>
+                    <div class="form-group"><label for="peca_id">Peça</label><select id="peca_id" name="peca_id" required><option value="">Selecione uma peça...</option>{% for peca in pecas %}{% if peca.quantidade > 0 %}<option value="{{ peca.id }}">{{ peca.nome }} — {{ peca.quantidade }} disponível(is)</option>{% endif %}{% endfor %}</select></div>
+                    <div class="form-group atendimento-part-quantity"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" name="quantidade" min="1" value="1" required></div><button type="submit" class="btn">Adicionar peça</button>
+                </form>
+            </section>
         </div>
-
-    {% else %}
-
-        <p>
-            Nenhuma peça utilizada neste atendimento.
-        </p>
-
-    {% endif %}
-
-
-    <br>
-
-
-    <h3>Adicionar peça</h3>
-
-    <br>
-
-
-    <!-- FORMULÁRIO DA PEÇA -->
-
-    <form
-        method="POST"
-        action="{{ url_for(
-            'atendimentos.adicionar_peca_atendimento',
-            id=atendimento.id
-        ) }}"
-    >
-
-        <div class="form-group">
-
-            <label for="peca_id">
-                Peça
-            </label>
-
-            <select
-                id="peca_id"
-                name="peca_id"
-                required
-            >
-
-                <option value="">
-                    Selecione uma peça...
-                </option>
-
-
-                {% for peca in pecas %}
-
-                    {% if peca.quantidade > 0 %}
-
-                        <option value="{{ peca.id }}">
-
-                            {{ peca.nome }}
-                            — {{ peca.quantidade }} disponível(is)
-
-                        </option>
-
-                    {% endif %}
-
-                {% endfor %}
-
-            </select>
-
-        </div>
-
-
-        <div class="form-group">
-
-            <label for="quantidade">
-                Quantidade
-            </label>
-
-            <input
-                type="number"
-                id="quantidade"
-                name="quantidade"
-                min="1"
-                value="1"
-                required
-            >
-
-        </div>
-
-
-        <button
-            type="submit"
-            class="btn"
-        >
-            Adicionar peça
-        </button>
-
-    </form>
-
+    </div>
 </div>
-
-
-<br>
-
-
-<!-- DATAS -->
-
-<div class="card">
-
-    <h2>Datas</h2>
-
-    <br>
-
-    <p>
-
-        <strong>Entrada:</strong>
-
-        {{ atendimento.data_entrada.strftime('%d/%m/%Y %H:%M') }}
-
-    </p>
-
-
-    {% if atendimento.data_saida %}
-
-    <p>
-
-        <strong>Saída:</strong>
-
-        {{ atendimento.data_saida.strftime('%d/%m/%Y %H:%M') }}
-
-    </p>
-
-    {% endif %}
-
-</div>
-
 {% endblock %}

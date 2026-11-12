@@ -8,9 +8,24 @@ Nova Máquina - TI Manager
 Nova Máquina
 {% endblock %}
 
+{% block header_actions %}
+<a
+    href="{{ proximo or url_for('maquinas.maquinas') }}"
+    class="btn btn-secondary"
+>
+    Voltar
+</a>
+{% endblock %}
+
 {% block content %}
 
 <form method="POST" class="form">
+
+    {% if proximo %}
+
+        <input type="hidden" name="proximo" value="{{ proximo }}">
+
+    {% endif %}
 
     <div class="form-group">
 

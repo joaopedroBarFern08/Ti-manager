@@ -1,0 +1,22 @@
+# Ambiente e segredos locais
+.env
+.env.*
+!.env.example
+
+# Ambientes virtuais e caches Python
+venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Banco SQLite local e arquivos temporários
+instance/
+*.db
+*.sqlite3
+
+# Arquivos do sistema e do editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

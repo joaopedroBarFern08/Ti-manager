@@ -1,22 +1,53 @@
 # TI Manager
 
-Sistema de gerenciamento de TI desenvolvido em Flask.
+Sistema interno para gestão de atendimentos, máquinas e estoque de TI.
 
-## Tecnologias
+## Estrutura do projeto
 
-- Python
-- Flask
-- SQLAlchemy
-- SQLite
+```text
+routes/      Rotas e regras de negócio
+templates/   Páginas HTML
+static/      CSS, JavaScript e imagens
+instance/    Banco SQLite local (não versionado)
+```
 
-## Instalação
+## Configuração
 
-Para executar o projeto em outra máquina, primeiro clone o repositório e entre na pasta do projeto. Depois, crie um novo ambiente virtual com "python -m venv venv" e ative-o com .\venv\Scripts\Activate.ps1. Com o ambiente ativado, instale as dependências utilizando "pip install -r requirements.txt".
+1. Crie e ative um ambiente virtual:
 
-Em seguida, copie o arquivo .env.example para .env utilizando "Copy-Item .env.example .env" e configure a a SECRET_KEY. 
+   ```powershell
+   py -m venv venv
+   .\venv\Scripts\Activate.ps1
+   ```
 
-Por fim, execute o sistema com python app.py e acesse http://127.0.0.1:5000 pelo navegador.
+2. Instale as dependências:
 
-O projeto utiliza SQLite e o banco de dados ti_manager.db é criado automaticamente na primeira execução. Como o banco não é versionado no GitHub, cada máquina terá seu próprio banco de dados.
+   ```powershell
+   pip install -r requirements.txt
+   ```
 
-As pastas e arquivos venv/, .env, *.db e __pycache__/ não devem ser enviados para o repositório.
+3. Copie o arquivo de exemplo e defina uma chave secreta forte:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+   Configure no mínimo `SECRET_KEY`. O arquivo `.env` e o banco local não são enviados ao Git.
+
+## Execução local
+
+```powershell
+.\venv\Scripts\python.exe app.py
+```
+
+O sistema será disponibilizado em `http://localhost:5000` e na rede local pela porta configurada em `PORT`.
+
+## Execução para produção
+
+Use o Waitress, em vez do servidor de desenvolvimento do Flask:
+
+```powershell
+.\venv\Scripts\waitress-serve.exe --host=0.0.0.0 --port=5000 app:app
+```
+
+Antes de publicar, defina uma `SECRET_KEY` exclusiva no ambiente de produção e configure o Firewall para a porta necessária. Para instalações com vários acessos simultâneos ou que precisem de backup centralizado, substitua o SQLite por um banco de dados gerenciado.

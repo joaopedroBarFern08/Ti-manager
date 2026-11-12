@@ -1,19 +1,40 @@
 {% extends "base.html" %}
 
 {% block title %}
-Nova Peça - TI Manager
+{% if peca %}Editar Peça{% else %}Nova Peça{% endif %} - TI Manager
 {% endblock %}
 
 {% block page_title %}
-Nova Peça
+{% if peca %}Editar Peça{% else %}Nova Peça{% endif %}
+{% endblock %}
+
+{% block header_actions %}
+<a
+    href="{{ proximo or url_for('estoque.estoque') }}"
+    class="btn btn-secondary"
+>
+    Voltar
+</a>
 {% endblock %}
 
 {% block content %}
 
 <form
     method="POST"
+    action="{{ url_for('estoque.nova_peca') }}"
     class="form"
+    data-editando="{{ 'true' if peca else 'false' }}"
 >
+
+    {% if proximo %}
+
+        <input
+            type="hidden"
+            name="proximo"
+            value="{{ proximo }}"
+        >
+
+    {% endif %}
 
     <div class="form-group">
 
@@ -25,6 +46,7 @@ Nova Peça
             type="text"
             id="nome"
             name="nome"
+            value="{{ peca.nome if peca else '' }}"
             autocomplete="off"
             required
         >
@@ -40,6 +62,7 @@ Nova Peça
         type="hidden"
         id="peca_id"
         name="peca_id"
+        value="{{ peca.id if peca else '' }}"
     >
 
     <div class="form-group">
@@ -48,11 +71,16 @@ Nova Peça
             Categoria
         </label>
 
-        <input
-            type="text"
+        <select
             id="categoria"
             name="categoria"
+            required
         >
+            {% set categoria_atual = peca.categoria if peca else 'novo' %}
+            <option value="novo" {% if categoria_atual == 'novo' %}selected{% endif %}>Novo</option>
+            <option value="reparo" {% if categoria_atual == 'reparo' %}selected{% endif %}>Reparo</option>
+            <option value="ferramenta" {% if categoria_atual == 'ferramenta' %}selected{% endif %}>Ferramenta</option>
+        </select>
 
     </div>
 
@@ -67,6 +95,7 @@ Nova Peça
             type="number"
             id="quantidade"
             name="quantidade"
+            value="{{ peca.quantidade if peca else '' }}"
             min="0"
             required
         >
@@ -85,7 +114,7 @@ Nova Peça
             id="estoque_minimo"
             name="estoque_minimo"
             min="0"
-            value="1"
+            value="{{ peca.estoque_minimo if peca else 1 }}"
             required
         >
 
@@ -96,7 +125,7 @@ Nova Peça
         type="submit"
         class="btn"
     >
-        Cadastrar peça
+        {% if peca %}Salvar alterações{% else %}Cadastrar peça{% endif %}
     </button>
 
 </form>
