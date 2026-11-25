@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, request
-from models import Peca
+from flask import Blueprint, jsonify, request, abort
+from models import Peca, Maquina
+from sqlalchemy import case, or_
 import unicodedata
 
 api_bp = Blueprint("api", __name__)
@@ -23,7 +24,7 @@ def api_pecas():
 
     pecas = Peca.query.order_by(
         Peca.nome
-    ).all()
+    ).filter_by(visivel=True).all()
 
     return jsonify([
         {
@@ -39,6 +40,8 @@ def api_pecas():
 def dados_peca(id):
 
     peca = Peca.query.get_or_404(id)
+    if not peca.visivel:
+        abort(404)
 
     return jsonify({
         "id": peca.id,
@@ -60,6 +63,7 @@ def buscar_pecas():
         return jsonify([])
 
     pecas = Peca.query.filter(
+        Peca.visivel.is_(True),
         Peca.nome.ilike(f"%{termo}%")
     ).order_by(
         Peca.nome
@@ -87,6 +91,7 @@ def buscar_categorias():
 
     chave_termo = chave_busca(termo)
     categorias = Peca.query.with_entities(Peca.categoria).filter(
+        Peca.visivel.is_(True),
         Peca.categoria.isnot(None),
         Peca.categoria != ""
     ).all()
@@ -105,3 +110,40 @@ def buscar_categorias():
             chaves_encontradas.add(chave_categoria)
 
     return jsonify(sorted(resultados, key=str.casefold)[:10])
+
+
+@api_bp.route("/api/maquinas/estoque/buscar")
+def buscar_maquinas_em_estoque():
+    termo = request.args.get("q", "").strip()
+    if not termo:
+        return jsonify([])
+
+    padrao = f"%{termo}%"
+    maquinas = Maquina.query.filter(
+        Maquina.visivel.is_(True),
+        Maquina.status_maquina == "Em estoque",
+        or_(
+            Maquina.patrimonio.ilike(padrao),
+            Maquina.empresa.ilike(padrao),
+            Maquina.tipo.ilike(padrao),
+            Maquina.modelo.ilike(padrao),
+        ),
+    ).order_by(
+        case(
+            (Maquina.patrimonio.ilike(f"{termo}%"), 0),
+            (Maquina.modelo.ilike(f"{termo}%"), 0),
+            (Maquina.empresa.ilike(f"{termo}%"), 0),
+            (Maquina.tipo.ilike(f"{termo}%"), 0),
+            else_=1,
+        ),
+        Maquina.patrimonio,
+    ).limit(15).all()
+
+    return jsonify([
+        {
+            "id": maquina.id,
+            "identificador": maquina.identificador,
+            "modelo": maquina.modelo or "Modelo não informado",
+        }
+        for maquina in maquinas
+    ])

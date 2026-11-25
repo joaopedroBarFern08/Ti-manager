@@ -21,10 +21,15 @@ Atendimentos
 
 </div>
 
+<div class="table-search">
+    <label for="search-atendimentos">Buscar atendimento</label>
+    <input id="search-atendimentos" type="search" data-table-search="atendimentos-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
+    <span class="table-search-count" data-search-count="atendimentos-table" aria-live="polite"></span>
+</div>
 
 <div class="table-container">
 
-    <table>
+    <table id="atendimentos-table" data-search-empty="Nenhum atendimento corresponde à busca.">
 
         <thead>
 
@@ -74,7 +79,7 @@ Atendimentos
 
             <tr>
 
-                <td colspan="5">
+                <td colspan="5" class="table-empty-row">
                     Nenhum atendimento registrado.
                 </td>
 

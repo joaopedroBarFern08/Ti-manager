@@ -8,9 +8,10 @@
     <form method="POST" class="form atendimento-create-form">
         {% if proximo %}<input type="hidden" name="proximo" value="{{ proximo }}">{% endif %}
         {% if erro %}<div class="alert-error">{{ erro }}</div>{% endif %}
-        <div class="form-group"><label for="patrimonio">Patrimônio da máquina</label><input type="text" id="patrimonio" name="patrimonio" placeholder="Ex.: 025618" maxlength="20" required><small>Informe apenas o número de patrimônio. Empresa e tipo podem ser preenchidos depois, no cadastro da máquina.</small></div>
+        <div class="form-group"><label for="patrimonio">Patrimônio da máquina</label><input type="text" id="patrimonio" name="patrimonio" placeholder="Ex.: 016738" maxlength="40" autocomplete="off" required><small>Digite o patrimônio. As siglas da empresa e do tipo serão completadas quando houver cadastro conhecido.</small></div>
         <div class="form-group form-group-last"><label for="problema_relatado">Problema relatado</label><textarea id="problema_relatado" name="problema_relatado" placeholder="Descreva o problema informado pelo usuário..." required></textarea></div>
         <div class="atendimento-form-footer"><small>O atendimento será criado com o status “Recebido”.</small><button type="submit" class="btn">Registrar atendimento</button></div>
     </form>
+    <script id="patrimonios-atendimento" type="application/json">{{ patrimonios|tojson }}</script>
 </div>
 {% endblock %}

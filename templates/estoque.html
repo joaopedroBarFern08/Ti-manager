@@ -21,10 +21,15 @@ Estoque
 
 </div>
 
+<div class="table-search">
+    <label for="search-estoque">Buscar no estoque</label>
+    <input id="search-estoque" type="search" data-table-search="estoque-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
+    <span class="table-search-count" data-search-count="estoque-table" aria-live="polite"></span>
+</div>
 
 <div class="table-container">
 
-    <table>
+    <table id="estoque-table" data-search-empty="Nenhum item corresponde à busca.">
 
         <thead>
 
@@ -95,7 +100,7 @@ Estoque
 
             <tr>
 
-                <td colspan="6">
+                <td colspan="5" class="table-empty-row">
                     Nenhuma peça cadastrada.
                 </td>
 

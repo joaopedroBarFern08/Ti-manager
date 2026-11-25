@@ -9,6 +9,11 @@
 {% endblock %}
 
 {% block header_actions %}
+{% if peca %}
+<form method="post" action="{{ url_for('estoque.excluir_peca', id=peca.id) }}" onsubmit="return confirm('Retirar este item do estoque? O histórico de movimentações será preservado.');">
+    <button type="submit" class="btn btn-danger">Excluir do estoque</button>
+</form>
+{% endif %}
 <a
     href="{{ proximo or url_for('estoque.estoque') }}"
     class="btn btn-secondary"

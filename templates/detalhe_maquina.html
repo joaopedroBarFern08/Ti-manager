@@ -15,6 +15,9 @@ Máquina {{ maquina.identificador }}
 >
     Voltar
 </a>
+<form method="post" action="{{ url_for('maquinas.excluir_maquina', id=maquina.id) }}" onsubmit="return confirm('Retirar esta máquina do registro operacional? O histórico de atendimentos será preservado.');">
+    <button type="submit" class="btn btn-danger">Excluir máquina</button>
+</form>
 {% endblock %}
 
 {% block content %}
@@ -136,35 +139,28 @@ Máquina {{ maquina.identificador }}
         </div>
 
 
+        <div class="form-group">
+
+            <label for="observacao">Observação</label>
+
+            <textarea
+                id="observacao"
+                name="observacao"
+                rows="4"
+                placeholder="Informações adicionais sobre a máquina"
+            >{{ maquina.observacao or '' }}</textarea>
+
+        </div>
+
+
        <div class="form-group">
 
-            <label for="ativo">
-                Status
-            </label>
+            <label for="status_maquina">Status</label>
 
-            <select
-                id="ativo"
-                name="ativo"
-            >
-
-                <option
-                    value="1"
-                    {% if maquina.ativo %}
-                        selected
-                    {% endif %}
-                >
-                    Ativo
-                </option>
-
-                <option
-                    value="0"
-                    {% if not maquina.ativo %}
-                        selected
-                    {% endif %}
-                >
-                    Inativo
-                </option>
-
+            <select id="status_maquina" name="status_maquina">
+                <option value="Ativo" {% if maquina.status_maquina == "Ativo" %}selected{% endif %}>Ativo</option>
+                <option value="Inativo" {% if maquina.status_maquina == "Inativo" %}selected{% endif %}>Inativo</option>
+                <option value="Em estoque" {% if maquina.status_maquina == "Em estoque" %}selected{% endif %}>Em estoque</option>
             </select>
 
         </div>
@@ -229,7 +225,7 @@ Máquina {{ maquina.identificador }}
 
                 <tbody>
 
-                    {% for atendimento in maquina.atendimentos|sort(
+                    {% for atendimento in maquina.atendimentos|selectattr('visivel')|sort(
                         attribute="data_entrada",
                         reverse=true
                     ) %}

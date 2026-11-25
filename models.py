@@ -35,8 +35,24 @@ class Maquina(db.Model):
         db.String(100)
     )
 
+    observacao = db.Column(
+        db.Text
+    )
+
     ativo = db.Column(
         db.Boolean,
+        default=True
+    )
+
+    status_maquina = db.Column(
+        db.String(20),
+        nullable=False,
+        default="Ativo"
+    )
+
+    visivel = db.Column(
+        db.Boolean,
+        nullable=False,
         default=True
     )
 
@@ -93,6 +109,8 @@ class Atendimento(db.Model):
 
     data_saida = db.Column(db.DateTime)
 
+    visivel = db.Column(db.Boolean, nullable=False, default=True)
+
     pecas = db.relationship(
         "AtendimentoPeca",
         backref="atendimento",
@@ -133,6 +151,8 @@ class Peca(db.Model):
         default=1,
         nullable=False
     )
+
+    visivel = db.Column(db.Boolean, nullable=False, default=True)
 
     movimentacoes = db.relationship(
         "MovimentacaoEstoque",
@@ -212,3 +232,25 @@ class MovimentacaoEstoque(db.Model):
         db.DateTime,
         default=datetime.now
     )
+
+
+class Usuario(db.Model):
+    __tablename__ = "usuarios"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome_usuario = db.Column(db.String(80), nullable=False, unique=True, index=True)
+    senha_hash = db.Column(db.String(255), nullable=False)
+    criado_em = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+
+class RegistroAuditoria(db.Model):
+    __tablename__ = "registros_auditoria"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario = db.Column(db.String(80), nullable=False)
+    acao = db.Column(db.String(20), nullable=False)
+    entidade = db.Column(db.String(40), nullable=False)
+    registro_id = db.Column(db.Integer)
+    resumo = db.Column(db.String(255), nullable=False)
+    detalhes = db.Column(db.Text)
+    data_hora = db.Column(db.DateTime, default=datetime.now, nullable=False, index=True)

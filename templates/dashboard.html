@@ -28,6 +28,11 @@
             <div><span>Máquinas ativas</span><strong>{{ total_maquinas }}</strong></div>
         </article>
 
+        <article class="dashboard-stat stat-green">
+            <div class="stat-icon">▣</div>
+            <div><span>Máquinas em estoque</span><strong>{{ maquinas_em_estoque }}</strong></div>
+        </article>
+
         <article class="dashboard-stat stat-violet">
             <div class="stat-icon">▤</div>
             <div><span>Total de atendimentos</span><strong>{{ total_atendimentos }}</strong></div>
@@ -42,6 +47,42 @@
             <div class="stat-icon">!</div>
             <div><span>Itens com estoque baixo</span><strong>{{ estoque_baixo|length }}</strong></div>
         </article>
+    </section>
+
+    <section class="dashboard-panel model-chart-panel">
+        <div class="dashboard-panel-heading model-chart-heading">
+            <div>
+                <span class="dashboard-panel-label">PARQUE DE MÁQUINAS</span>
+                <h2>Máquinas por modelo</h2>
+                <p>Compare quantas unidades de cada modelo estão ativas e em estoque.</p>
+            </div>
+            <div class="model-chart-legend" aria-label="Legenda do gráfico">
+                <span><i class="legend-active"></i> Ativas</span>
+                <span><i class="legend-stock"></i> Em estoque</span>
+            </div>
+        </div>
+
+        {% if modelos_maquinas %}
+            <div class="model-chart" role="list" aria-label="Quantidade de máquinas por modelo e situação">
+                {% for item in modelos_maquinas %}
+                    <div class="model-chart-row" role="listitem">
+                        <span class="model-chart-name" title="{{ item.nome }}">{{ item.nome }}</span>
+                        <div class="model-chart-bars">
+                            <div class="model-chart-bar-line">
+                                <span class="model-chart-bar active-bar" style="width: {{ (item.ativo / maior_quantidade_modelo * 100) if maior_quantidade_modelo else 0 }}%"></span>
+                                <strong>{{ item.ativo }}</strong>
+                            </div>
+                            <div class="model-chart-bar-line">
+                                <span class="model-chart-bar stock-bar" style="width: {{ (item.estoque / maior_quantidade_modelo * 100) if maior_quantidade_modelo else 0 }}%"></span>
+                                <strong>{{ item.estoque }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="model-chart-empty">Cadastre máquinas ativas ou em estoque para visualizar os modelos aqui.</div>
+        {% endif %}
     </section>
 
     <section class="dashboard-grid">

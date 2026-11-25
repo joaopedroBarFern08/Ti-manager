@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar - TI Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-page">
+    <main class="auth-card">
+        <span class="auth-eyebrow">TI MANAGER</span>
+        <h1>Entrar</h1>
+        <p>Acesse com sua conta individual para registrar suas ações.</p>
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+            {% for categoria, mensagem in mensagens %}<div class="flash-message flash-{{ categoria }}">{{ mensagem }}</div>{% endfor %}
+        {% endwith %}
+        <form method="post" class="auth-form">
+            <input type="hidden" name="proximo" value="{{ proximo }}">
+            <label for="nome_usuario">Usuário</label>
+            <input id="nome_usuario" name="nome_usuario" type="text" autocomplete="username" required autofocus>
+            <label for="senha">Senha</label>
+            <input id="senha" name="senha" type="password" autocomplete="current-password" required>
+            <button class="btn" type="submit">Entrar</button>
+        </form>
+        <a href="{{ url_for('auth.cadastro') }}">Criar conta</a>
+    </main>
+</body>
+</html>

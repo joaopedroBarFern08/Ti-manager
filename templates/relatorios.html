@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Relatórios - TI Manager{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+{% block content %}
+<div class="audit-page">
+    <section class="audit-intro">
+        <div><span class="audit-eyebrow">HISTÓRICO DE AÇÕES</span><h2>Relatório de atividades</h2><p>Registro de inclusões, alterações, movimentações e exclusões feitas no sistema.</p></div>
+        <span class="audit-total">{{ paginacao.total }} registro(s)</span>
+    </section>
+
+    {% if paginacao.items %}
+    <div class="table-container audit-table-container">
+        <table class="audit-table">
+            <thead><tr><th>Data e hora</th><th>Usuário</th><th>Ação</th><th>Registro</th><th>Detalhes</th></tr></thead>
+            <tbody>
+                {% for registro in paginacao.items %}
+                <tr>
+                    <td>{{ registro.data_hora.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                    <td><strong>{{ registro.usuario }}</strong></td>
+                    <td><span class="audit-action audit-{{ registro.acao|lower }}">{{ registro.acao }}</span></td>
+                    <td>{{ registro.entidade }}{% if registro.registro_id %} #{{ registro.registro_id }}{% endif %}</td>
+                    <td><strong>{{ registro.resumo }}</strong>{% if registro.detalhes %}<small>{{ registro.detalhes }}</small>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="audit-empty"><span>◷</span><h3>Nenhuma atividade registrada</h3><p>As próximas alterações e movimentações aparecerão aqui com o usuário e o horário.</p></div>
+    {% endif %}
+
+    {% if paginacao.pages > 1 %}
+    <nav class="audit-pagination" aria-label="Paginação do relatório">
+        {% if paginacao.has_prev %}<a href="{{ url_for('relatorios.relatorios', pagina=paginacao.prev_num) }}">← Anterior</a>{% endif %}
+        <span>Página {{ paginacao.page }} de {{ paginacao.pages }}</span>
+        {% if paginacao.has_next %}<a href="{{ url_for('relatorios.relatorios', pagina=paginacao.next_num) }}">Próxima →</a>{% endif %}
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

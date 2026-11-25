@@ -9,14 +9,52 @@
         <div class="saida-intro-icon">↗</div>
         <div>
             <span class="saida-eyebrow">Movimentação avulsa</span>
-            <h2>Registrar saída de produto</h2>
-            <p>Selecione o produto, informe quem o recebeu e a quantidade entregue.</p>
+            <h2>Registrar uma entrega</h2>
+            <p>Registre a saída de uma máquina ou de um produto com estoque.</p>
         </div>
     </section>
 
+    <form method="POST" action="{{ url_for('estoque.saida_maquina') }}" class="form saida-form saida-machine-form">
+        <div class="saida-form-heading">
+            <span>Saída de máquina</span>
+            <small>A máquina passará para o status Ativo.</small>
+        </div>
+
+        {% if maquinas_em_estoque %}
+        <div class="form-group saida-product-field saida-machine-field">
+            <label for="maquina_busca">Máquina</label>
+            <input type="text" id="maquina_busca" placeholder="Digite uma inicial, patrimônio ou modelo..." autocomplete="off" required>
+            <input type="hidden" id="maquina_id" name="maquina_id">
+            <div class="saida-sugestoes saida-maquina-sugestoes" aria-live="polite"></div>
+            <small class="saida-selected-product" id="maquina-selecionada">Nenhuma máquina selecionada.</small>
+        </div>
+
+        <div class="saida-fields-row saida-machine-fields">
+            <div class="form-group">
+                <label for="setor-destino">Setor de destino</label>
+                <input type="text" id="setor-destino" name="setor" maxlength="100" placeholder="Ex.: Suporte" required>
+            </div>
+            <div class="form-group">
+                <label for="usuario-destino">Usuário (opcional)</label>
+                <input type="text" id="usuario-destino" name="usuario" maxlength="100" placeholder="Nome de quem recebeu">
+            </div>
+        </div>
+
+        <div class="saida-form-footer">
+            <small>O setor é obrigatório; o usuário pode ficar em branco.</small>
+            <button type="submit" class="btn">Confirmar saída da máquina</button>
+        </div>
+        {% else %}
+        <div class="saida-history-empty">
+            <span>✓</span>
+            <div><strong>Nenhuma máquina disponível</strong><p>Cadastre ou retorne uma máquina ao estoque para registrar uma entrega.</p></div>
+        </div>
+        {% endif %}
+    </form>
+
     <form method="POST" class="form saida-form" data-peca-autocomplete>
         <div class="saida-form-heading">
-            <span>Dados da entrega</span>
+            <span>Saída de produto</span>
             <small>A data e o horário são registrados automaticamente.</small>
         </div>
 
@@ -44,6 +82,41 @@
             <button type="submit" class="btn">Confirmar saída</button>
         </div>
     </form>
+
+    <section class="saida-history">
+        <div class="saida-history-heading">
+            <div>
+                <span class="saida-eyebrow">Entregas de equipamentos</span>
+                <h2>Histórico de saídas de máquinas</h2>
+            </div>
+            <span>{{ saidas_maquinas|length }} registro(s)</span>
+        </div>
+
+        {% if saidas_maquinas %}
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Máquina</th><th>Setor</th><th>Usuário recebido</th><th>Registrado por</th><th>Data da saída</th></tr></thead>
+                <tbody>
+                    {% for saida in saidas_maquinas %}
+                    {% set destino = saida.detalhes.split('; usuário: ', 1) if saida.detalhes else [] %}
+                    <tr>
+                        <td><strong>{{ saida.resumo|replace('Entregou a máquina ', '') }}</strong></td>
+                        <td>{{ destino[0]|replace('Setor: ', '') if destino else '—' }}</td>
+                        <td>{% if destino|length > 1 and destino[1].rstrip('.') != 'não informado' %}{{ destino[1].rstrip('.') }}{% else %}—{% endif %}</td>
+                        <td>{{ saida.usuario }}</td>
+                        <td>{{ saida.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="saida-history-empty">
+            <span>↗</span>
+            <div><strong>Nenhuma máquina entregue ainda</strong><p>As próximas saídas de máquinas aparecerão aqui.</p></div>
+        </div>
+        {% endif %}
+    </section>
 
     <section class="saida-history">
         <div class="saida-history-heading">

@@ -1,7 +1,99 @@
 
 //Função de devolver
 
+const formularioMaquina = document.querySelector("#patrimonios-maquinas");
+
+if (formularioMaquina) {
+    const inputPatrimonio = document.getElementById("patrimonio");
+    const inputEmpresa = document.getElementById("empresa");
+    const inputTipo = document.getElementById("tipo");
+    const inputModelo = document.getElementById("modelo");
+    const patrimonios = JSON.parse(formularioMaquina.textContent || "{}");
+
+    function preencherIdentificadorMaquina() {
+        const valor = inputPatrimonio.value.trim().toUpperCase();
+        const partes = valor.match(/^([^-]+)-([^-]+)-([ND])$/);
+
+        if (partes) {
+            inputPatrimonio.value = partes[1];
+            inputEmpresa.value = partes[2];
+            inputTipo.value = partes[3] === "N" ? "notebook" : "desktop";
+            const dados = patrimonios[partes[1]];
+            if (dados?.modelo && inputModelo) inputModelo.value = dados.modelo;
+            document.getElementById("status_maquina").value = "Em estoque";
+            return;
+        }
+
+        const dados = patrimonios[valor];
+        if (dados) {
+            inputEmpresa.value = dados.empresa;
+            inputTipo.value = dados.tipo;
+            if (dados.modelo && inputModelo) inputModelo.value = dados.modelo;
+            document.getElementById("status_maquina").value = "Em estoque";
+        }
+    }
+
+    inputPatrimonio.addEventListener("input", preencherIdentificadorMaquina);
+    inputPatrimonio.addEventListener("change", preencherIdentificadorMaquina);
+}
+
+const formularioAtendimento = document.querySelector("#patrimonios-atendimento");
+if (formularioAtendimento) {
+    const inputPatrimonioAtendimento = document.getElementById("patrimonio");
+    const patrimoniosAtendimento = JSON.parse(formularioAtendimento.textContent || "{}");
+
+    inputPatrimonioAtendimento.addEventListener("blur", function () {
+        const valor = inputPatrimonioAtendimento.value.trim().toUpperCase();
+        const identificador = patrimoniosAtendimento[valor];
+        if (identificador) inputPatrimonioAtendimento.value = identificador;
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll("[data-table-search]").forEach(function (input) {
+        const table = document.getElementById(input.dataset.tableSearch);
+        if (!table) return;
+
+        const tbody = table.querySelector("tbody");
+        const rows = Array.from(tbody.querySelectorAll("tr:not(.table-empty-row)"));
+        const initialEmptyRow = tbody.querySelector(".table-empty-row");
+        const count = document.querySelector(
+            `[data-search-count="${input.dataset.tableSearch}"]`
+        );
+        const noResultsRow = document.createElement("tr");
+        noResultsRow.className = "table-search-empty";
+        noResultsRow.hidden = true;
+        noResultsRow.innerHTML = `<td colspan="${table.querySelectorAll("thead th").length}"></td>`;
+        noResultsRow.querySelector("td").textContent = table.dataset.searchEmpty;
+        tbody.appendChild(noResultsRow);
+
+        function normalize(text) {
+            return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
+        }
+
+        function filterRows() {
+            const query = normalize(input.value.trim());
+            let visibleCount = 0;
+
+            rows.forEach(function (row) {
+                const matches = normalize(row.innerText).includes(query);
+                row.hidden = !matches;
+                if (matches) visibleCount++;
+            });
+
+            if (initialEmptyRow) initialEmptyRow.hidden = Boolean(query);
+            noResultsRow.hidden = !query || visibleCount > 0;
+            if (count) {
+                count.textContent = query
+                    ? `${visibleCount} resultado${visibleCount === 1 ? "" : "s"}`
+                    : `${rows.length} registro${rows.length === 1 ? "" : "s"}`;
+            }
+        }
+
+        input.addEventListener("input", filterRows);
+        filterRows();
+    });
 
     const botoes = document.querySelectorAll(".btn-qtd");
 
@@ -285,6 +377,75 @@ if (formularioSaida) {
             produtoSelecionado.textContent =
                 "Selecione um produto em uma das sugestões.";
             nomeProduto.focus();
+        }
+    });
+}
+
+// Busca máquinas disponíveis para saída por patrimônio, tipo ou modelo.
+const formularioSaidaMaquina = document.querySelector(".saida-machine-form");
+
+if (formularioSaidaMaquina) {
+    const buscaMaquina = formularioSaidaMaquina.querySelector("#maquina_busca");
+    const idMaquina = formularioSaidaMaquina.querySelector("#maquina_id");
+    const sugestoesMaquina = formularioSaidaMaquina.querySelector(".saida-maquina-sugestoes");
+    const maquinaSelecionada = formularioSaidaMaquina.querySelector("#maquina-selecionada");
+    let timerBuscaMaquina = null;
+
+    buscaMaquina.addEventListener("input", function () {
+        const termo = buscaMaquina.value.trim();
+        idMaquina.value = "";
+        maquinaSelecionada.textContent = "Nenhuma máquina selecionada.";
+        sugestoesMaquina.innerHTML = "";
+        clearTimeout(timerBuscaMaquina);
+
+        if (!termo) return;
+
+        timerBuscaMaquina = setTimeout(function () {
+            fetch(`/api/maquinas/estoque/buscar?q=${encodeURIComponent(termo)}`)
+                .then(response => response.ok ? response.json() : [])
+                .then(maquinas => {
+                    sugestoesMaquina.innerHTML = "";
+
+                    if (!maquinas.length) {
+                        const vazio = document.createElement("div");
+                        vazio.className = "saida-sugestao-vazia";
+                        vazio.textContent = "Nenhuma máquina encontrada no estoque.";
+                        sugestoesMaquina.appendChild(vazio);
+                        return;
+                    }
+
+                    maquinas.forEach(function (maquina) {
+                        const item = document.createElement("button");
+                        const texto = document.createElement("span");
+                        const identificador = document.createElement("strong");
+                        const modelo = document.createElement("small");
+
+                        item.type = "button";
+                        item.className = "saida-sugestao-item";
+                        identificador.textContent = maquina.identificador;
+                        modelo.textContent = maquina.modelo;
+                        texto.append(identificador, modelo);
+                        item.appendChild(texto);
+                        item.addEventListener("click", function () {
+                            buscaMaquina.value = maquina.identificador;
+                            idMaquina.value = maquina.id;
+                            maquinaSelecionada.textContent = `Selecionada: ${maquina.identificador} — ${maquina.modelo}`;
+                            sugestoesMaquina.innerHTML = "";
+                        });
+                        sugestoesMaquina.appendChild(item);
+                    });
+                })
+                .catch(() => {
+                    sugestoesMaquina.innerHTML = "";
+                });
+        }, 180);
+    });
+
+    formularioSaidaMaquina.addEventListener("submit", function (event) {
+        if (!idMaquina.value) {
+            event.preventDefault();
+            maquinaSelecionada.textContent = "Digite e selecione uma máquina nas sugestões.";
+            buscaMaquina.focus();
         }
     });
 }

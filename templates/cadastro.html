@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar conta - TI Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-page">
+    <main class="auth-card">
+        <span class="auth-eyebrow">TI MANAGER</span>
+        <h1>Criar conta</h1>
+        <p>Use uma conta individual para que o relatório identifique suas ações.</p>
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+            {% for categoria, mensagem in mensagens %}<div class="flash-message flash-{{ categoria }}">{{ mensagem }}</div>{% endfor %}
+        {% endwith %}
+        <form method="post" class="auth-form">
+            <label for="nome_usuario">Usuário</label>
+            <input id="nome_usuario" name="nome_usuario" type="text" minlength="3" maxlength="80" autocomplete="username" required>
+            <label for="senha">Senha</label>
+            <input id="senha" name="senha" type="password" minlength="8" autocomplete="new-password" required>
+            <label for="confirmar_senha">Confirme a senha</label>
+            <input id="confirmar_senha" name="confirmar_senha" type="password" minlength="8" autocomplete="new-password" required>
+            <button class="btn" type="submit">Criar conta</button>
+        </form>
+        <a href="{{ url_for('auth.entrar') }}">Já tenho uma conta</a>
+    </main>
+</body>
+</html>

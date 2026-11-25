@@ -1,6 +1,41 @@
 """Pequenas migrações de compatibilidade para o banco SQLite local."""
 
+import csv
+from pathlib import Path
+
 from database import db
+
+
+def adicionar_observacao_maquina():
+    """Adiciona observações às máquinas já cadastradas."""
+    conexao = db.engine.raw_connection()
+    cursor = conexao.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT name FROM sqlite_master "
+            "WHERE type = 'table' AND name = 'maquinas'"
+        )
+
+        if not cursor.fetchone():
+            return
+
+        cursor.execute("PRAGMA table_info(maquinas)")
+        colunas = {coluna[1] for coluna in cursor.fetchall()}
+
+        if "observacao" not in colunas:
+            cursor.execute(
+                "ALTER TABLE maquinas ADD COLUMN observacao TEXT"
+            )
+            conexao.commit()
+
+    except Exception:
+        conexao.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conexao.close()
 
 
 def adicionar_destinatario_movimentacao_estoque():
@@ -131,16 +166,24 @@ def permitir_maquina_sem_empresa_e_tipo():
                 modelo VARCHAR(100),
                 usuario VARCHAR(100),
                 setor VARCHAR(100),
-                ativo BOOLEAN
+                ativo BOOLEAN,
+                observacao TEXT,
+                status_maquina VARCHAR(20) NOT NULL DEFAULT 'Ativo'
             )
             """
         )
+        observacao_origem = "observacao" if "observacao" in colunas else "NULL"
+        status_origem = "status_maquina" if "status_maquina" in colunas else (
+            "CASE WHEN ativo THEN 'Ativo' ELSE 'Inativo' END"
+        )
         cursor.execute(
-            """
+            f"""
             INSERT INTO maquinas_nova
-                (id, patrimonio, empresa, tipo, modelo, usuario, setor, ativo)
+                (id, patrimonio, empresa, tipo, modelo, usuario, setor, ativo,
+                 observacao, status_maquina)
             SELECT
-                id, patrimonio, empresa, tipo, modelo, usuario, setor, ativo
+                id, patrimonio, empresa, tipo, modelo, usuario, setor, ativo,
+                {observacao_origem}, {status_origem}
             FROM maquinas
             """
         )
@@ -154,5 +197,75 @@ def permitir_maquina_sem_empresa_e_tipo():
 
     finally:
         cursor.execute("PRAGMA foreign_keys = ON")
+        cursor.close()
+        conexao.close()
+
+
+def migrar_campos_visibilidade_maquina():
+    """Adiciona status e oculta os patrimônios da lista até serem cadastrados."""
+    conexao = db.engine.raw_connection()
+    cursor = conexao.cursor()
+
+    try:
+        cursor.execute("PRAGMA table_info(maquinas)")
+        colunas = {coluna[1] for coluna in cursor.fetchall()}
+        if not colunas:
+            return
+
+        if "status_maquina" not in colunas:
+            cursor.execute(
+                "ALTER TABLE maquinas ADD COLUMN status_maquina "
+                "VARCHAR(20) NOT NULL DEFAULT 'Ativo'"
+            )
+            cursor.execute(
+                "UPDATE maquinas SET status_maquina = "
+                "CASE WHEN ativo THEN 'Ativo' ELSE 'Inativo' END"
+            )
+        if "visivel" not in colunas:
+            cursor.execute(
+                "ALTER TABLE maquinas ADD COLUMN visivel "
+                "BOOLEAN NOT NULL DEFAULT 1"
+            )
+            caminho_csv = Path(__file__).resolve().parent / "data" / "computadores.csv"
+            if caminho_csv.exists():
+                with caminho_csv.open(encoding="utf-8-sig", newline="") as arquivo:
+                    for linha in csv.DictReader(arquivo):
+                        partes = (linha.get("identificador") or "").strip().upper().split("-")
+                        if len(partes) == 3 and partes[0]:
+                            cursor.execute(
+                                "UPDATE maquinas SET visivel = 0 WHERE patrimonio = ?",
+                                (partes[0],)
+                            )
+
+        conexao.commit()
+
+    except Exception:
+        conexao.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conexao.close()
+
+
+def adicionar_visibilidade_operacional():
+    """Permite retirar itens das telas sem apagar o histórico relacionado."""
+    conexao = db.engine.raw_connection()
+    cursor = conexao.cursor()
+
+    try:
+        for tabela in ("atendimentos", "pecas"):
+            cursor.execute(f"PRAGMA table_info({tabela})")
+            colunas = {coluna[1] for coluna in cursor.fetchall()}
+            if colunas and "visivel" not in colunas:
+                cursor.execute(
+                    f"ALTER TABLE {tabela} ADD COLUMN visivel "
+                    "BOOLEAN NOT NULL DEFAULT 1"
+                )
+        conexao.commit()
+    except Exception:
+        conexao.rollback()
+        raise
+    finally:
         cursor.close()
         conexao.close()

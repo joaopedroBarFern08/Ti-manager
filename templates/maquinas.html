@@ -21,10 +21,15 @@ Máquinas
 
 </div>
 
+<div class="table-search">
+    <label for="search-maquinas">Buscar máquina</label>
+    <input id="search-maquinas" type="search" data-table-search="maquinas-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
+    <span class="table-search-count" data-search-count="maquinas-table" aria-live="polite"></span>
+</div>
 
 <div class="table-container">
 
-    <table>
+    <table id="maquinas-table" data-search-empty="Nenhuma máquina corresponde à busca.">
 
         <thead>
 
@@ -34,6 +39,7 @@ Máquinas
                 <th>Modelo</th>
                 <th>Usuário</th>
                 <th>Setor</th>
+                <th>Observação</th>
                 <th>Status</th>
 
             </tr>
@@ -68,11 +74,11 @@ Máquinas
                 </td>
 
                 <td>
-                    {% if maquina.ativo %}
-                        Ativo
-                    {% else %}
-                        Inativo
-                    {% endif %}
+                    {{ maquina.observacao or "Não informado" }}
+                </td>
+
+                <td>
+                    {{ maquina.status_maquina }}
                 </td>
 
             </tr>
@@ -81,7 +87,7 @@ Máquinas
 
             <tr>
 
-                <td colspan="4">
+                <td colspan="6" class="table-empty-row">
                     Nenhuma máquina cadastrada.
                 </td>
 

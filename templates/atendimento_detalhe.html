@@ -4,6 +4,7 @@
 {% block header_actions %}
 <div class="atendimento-header-actions">
     <a href="{{ url_for('atendimentos.atendimentos') }}" class="btn btn-secondary">Voltar</a>
+    <form method="post" action="{{ url_for('atendimentos.excluir_atendimento', id=atendimento.id) }}" onsubmit="return confirm('Retirar este atendimento da lista? O histórico e as movimentações serão preservados.');"><button type="submit" class="btn btn-danger">Excluir atendimento</button></form>
     <button type="submit" form="atendimento-form" class="btn">Salvar alterações</button>
 </div>
 {% endblock %}

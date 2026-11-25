@@ -65,6 +65,13 @@
                 Saída
             </a>
 
+            <a
+                href="{{ url_for('relatorios.relatorios') }}"
+                class="{% if request.endpoint.startswith('relatorios.') %}active{% endif %}"
+            >
+                Relatório
+            </a>
+
         </nav>
 
     </aside>
@@ -80,6 +87,11 @@
 
             <div class="topbar-actions">
                 {% block header_actions %}{% endblock %}
+            </div>
+
+            <div class="user-session">
+                <span>{{ usuario_atual.nome_usuario if usuario_atual else '' }}</span>
+                <form method="post" action="{{ url_for('auth.sair') }}"><button type="submit">Sair</button></form>
             </div>
 
         </header>

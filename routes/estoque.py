@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 
 from database import db
-from models import MovimentacaoEstoque, Peca
+from models import MovimentacaoEstoque, Peca, Maquina, RegistroAuditoria
 from navegacao import obter_proxima_url
+from auditoria import comparar_campos, descrever_alteracoes, registrar_acao
 
 estoque_bp = Blueprint("estoque", __name__)
 CATEGORIAS_PERMITIDAS = ("novo", "reparo", "ferramenta")
@@ -18,9 +19,7 @@ def url_formulario_peca(proximo):
 @estoque_bp.route("/estoque")
 def estoque():
 
-    pecas = Peca.query.order_by(
-        Peca.nome
-    ).all()
+    pecas = Peca.query.filter_by(visivel=True).order_by(Peca.nome).all()
 
     return render_template(
         "estoque.html",
@@ -119,7 +118,7 @@ def nova_peca():
                 int(peca_id)
             )
 
-            if not peca:
+            if not peca or not peca.visivel:
 
                 flash(
                     "Peça não encontrada.",
@@ -131,10 +130,21 @@ def nova_peca():
                 )
 
 
-            peca.nome = nome
-            peca.categoria = categoria
-            peca.quantidade = quantidade
-            peca.estoque_minimo = estoque_minimo
+            alteracoes = comparar_campos(peca, [
+                ("nome", "Nome", nome),
+                ("categoria", "Categoria", categoria),
+                ("quantidade", "Quantidade", quantidade),
+                ("estoque_minimo", "Estoque mínimo", estoque_minimo),
+            ])
+            for nome_campo, _rotulo, _antigo, novo_valor in alteracoes:
+                setattr(peca, nome_campo, novo_valor)
+
+            if alteracoes:
+                registrar_acao(
+                    "Editou", "Item do estoque", peca.id,
+                    f"Editou o item {peca.nome}",
+                    descrever_alteracoes(alteracoes),
+                )
 
             db.session.commit()
 
@@ -153,9 +163,7 @@ def nova_peca():
         # NOVA PEÇA
         # =================================
 
-        peca_existente = Peca.query.filter_by(
-            nome=nome
-        ).first()
+        peca_existente = Peca.query.filter_by(nome=nome, visivel=True).first()
 
 
         if peca_existente:
@@ -170,6 +178,20 @@ def nova_peca():
                 url_formulario_peca(proximo)
             )
 
+        peca_oculta = Peca.query.filter_by(nome=nome, visivel=False).first()
+        if peca_oculta:
+            peca_oculta.categoria = categoria
+            peca_oculta.quantidade = quantidade
+            peca_oculta.estoque_minimo = estoque_minimo
+            peca_oculta.visivel = True
+            registrar_acao(
+                "Adicionou", "Item do estoque", peca_oculta.id,
+                f"Reativou o item {peca_oculta.nome} no estoque",
+            )
+            db.session.commit()
+            flash(f"Peça '{peca_oculta.nome}' adicionada novamente ao estoque.", "success")
+            return redirect(proximo or url_for("estoque.estoque"))
+
 
         peca = Peca(
             nome=nome,
@@ -179,7 +201,12 @@ def nova_peca():
         )
 
         db.session.add(peca)
-
+        db.session.flush()
+        registrar_acao(
+            "Adicionou", "Item do estoque", peca.id,
+            f"Cadastrou o item {peca.nome}",
+            f"Categoria: {peca.categoria}; quantidade: {peca.quantidade}; mínimo: {peca.estoque_minimo}.",
+        )
         db.session.commit()
 
 
@@ -225,7 +252,7 @@ def saida():
 
         peca = db.session.get(Peca, peca_id)
 
-        if not peca:
+        if not peca or not peca.visivel:
             flash("Produto não encontrado.", "error")
             return redirect(url_for("estoque.saida"))
 
@@ -244,6 +271,11 @@ def saida():
             motivo="Saída avulsa",
             destinatario=destinatario,
         ))
+        registrar_acao(
+            "Movimentou", "Estoque", peca.id,
+            f"Registrou saída de {quantidade} unidade(s) de {peca.nome}",
+            f"Destinatário: {destinatario}; saldo restante: {peca.quantidade}.",
+        )
         db.session.commit()
 
         flash(
@@ -255,20 +287,85 @@ def saida():
     movimentacoes = MovimentacaoEstoque.query.order_by(
         MovimentacaoEstoque.data.desc()
     ).all()
+    maquinas_em_estoque = Maquina.query.filter_by(
+        visivel=True,
+        status_maquina="Em estoque",
+    ).order_by(Maquina.patrimonio).all()
+    saidas_maquinas = RegistroAuditoria.query.filter_by(
+        entidade="Saída de máquina"
+    ).order_by(
+        RegistroAuditoria.data_hora.desc(), RegistroAuditoria.id.desc()
+    ).limit(100).all()
 
     return render_template(
         "saida_form.html",
-        movimentacoes=movimentacoes
+        movimentacoes=movimentacoes,
+        maquinas_em_estoque=maquinas_em_estoque,
+        saidas_maquinas=saidas_maquinas,
     )
+
+
+@estoque_bp.route("/saida/maquina", methods=["POST"])
+def saida_maquina():
+    maquina_id = request.form.get("maquina_id", type=int)
+    setor = " ".join(request.form.get("setor", "").split())
+    usuario = " ".join(request.form.get("usuario", "").split()) or None
+
+    if not maquina_id:
+        flash("Selecione uma máquina do estoque.", "error")
+        return redirect(url_for("estoque.saida"))
+    if not setor:
+        flash("Informe o setor de destino da máquina.", "error")
+        return redirect(url_for("estoque.saida"))
+
+    maquina = Maquina.query.filter_by(
+        id=maquina_id,
+        visivel=True,
+        status_maquina="Em estoque",
+    ).first()
+    if not maquina:
+        flash("A máquina selecionada não está mais disponível em estoque.", "error")
+        return redirect(url_for("estoque.saida"))
+
+    maquina.status_maquina = "Ativo"
+    maquina.ativo = True
+    maquina.setor = setor
+    maquina.usuario = usuario
+    registrar_acao(
+        "Movimentou", "Saída de máquina", maquina.id,
+        f"Entregou a máquina {maquina.identificador}",
+        f"Setor: {setor}; usuário: {usuario or 'não informado'}.",
+    )
+    db.session.commit()
+
+    flash(f"Máquina {maquina.identificador} entregue ao setor {setor}.", "success")
+    return redirect(url_for("estoque.saida"))
 
 
 @estoque_bp.route("/pecas/<int:id>")
 def editar_peca(id):
 
     peca = db.get_or_404(Peca, id)
+    if not peca.visivel:
+        abort(404)
 
     return render_template(
         "peca_form.html",
         peca=peca,
         proximo=None
     )
+
+
+@estoque_bp.route("/pecas/<int:id>/excluir", methods=["POST"])
+def excluir_peca(id):
+    peca = db.get_or_404(Peca, id)
+    if peca.visivel:
+        peca.visivel = False
+        registrar_acao(
+            "Excluiu", "Item do estoque", peca.id,
+            f"Retirou o item {peca.nome} do estoque",
+            f"Saldo registrado no momento da retirada: {peca.quantidade}.",
+        )
+        db.session.commit()
+        flash("Item retirado do estoque. O histórico de movimentações foi preservado.", "success")
+    return redirect(url_for("estoque.estoque"))

@@ -61,6 +61,15 @@ Nova Máquina
 
     </div>
 
+    <div class="form-group">
+        <label for="status_maquina">Status</label>
+        <select id="status_maquina" name="status_maquina">
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+            <option value="Em estoque">Em estoque</option>
+        </select>
+    </div>
+
 
     <div class="form-group">
 
@@ -137,6 +146,19 @@ Nova Máquina
 
     </div>
 
+    <div class="form-group">
+
+        <label for="observacao">Observação</label>
+
+        <textarea
+            id="observacao"
+            name="observacao"
+            rows="4"
+            placeholder="Informações adicionais sobre a máquina"
+        ></textarea>
+
+    </div>
+
 
     <button
         type="submit"
@@ -146,5 +168,7 @@ Nova Máquina
     </button>
 
 </form>
+
+<script id="patrimonios-maquinas" type="application/json">{{ patrimonios|tojson }}</script>
 
 {% endblock %}
