@@ -2,7 +2,7 @@
 
 Sistema interno para gestão de atendimentos, máquinas e estoque de TI.
 
-## Estrutura do projeto
+## Estrutura do projeto (Ainda em desenvolvimento)
 
 ```text
 routes/      Rotas e regras de negócio
