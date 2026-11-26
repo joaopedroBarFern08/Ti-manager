@@ -15,6 +15,10 @@ instance/
 *.db
 *.sqlite3
 
+# Dados operacionais e snapshots locais
+/data/computadores.csv
+/backups/
+
 # Arquivos do sistema e do editor
 .DS_Store
 Thumbs.db

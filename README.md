@@ -42,6 +42,22 @@ instance/    Banco SQLite local (não versionado)
 
 O sistema será disponibilizado em `http://localhost:5000` e na rede local pela porta configurada em `PORT`.
 
+O arquivo `data/computadores.csv` é opcional e pode conter identificadores e modelos usados para sugestões nos formulários. Para criar sua cópia local, use `data/computadores.example.csv` como referência; o arquivo local é ignorado pelo Git.
+
+## Administradores
+
+Contas novas começam como usuários comuns. Depois de criar uma conta, promova-a no ambiente virtual:
+
+```powershell
+.\venv\Scripts\flask.exe --app app.py promover-admin NOME_DO_USUARIO
+```
+
+Para remover a permissão administrativa:
+
+```powershell
+.\venv\Scripts\flask.exe --app app.py revogar-admin NOME_DO_USUARIO
+```
+
 ## Execução para produção
 
 Use o Waitress, em vez do servidor de desenvolvimento do Flask:
