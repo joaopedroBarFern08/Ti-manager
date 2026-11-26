@@ -8,6 +8,12 @@
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        (() => {
+            const theme = localStorage.getItem('ti-manager-theme') || 'light';
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
 </head>
 
 <body>
@@ -23,7 +29,7 @@
             </div>
 
             <div class="logo">
-                TI Manager
+                <span>TI Manager</span>
                 <small>Gestão de Hardware</small>
             </div>
         </div>
@@ -59,20 +65,36 @@
             </a>
 
             <a
-                href="{{ url_for('estoque.saida') }}"
-                class="{% if request.endpoint == 'estoque.saida' %}active{% endif %}"
-            >
-                Saída
-            </a>
-
-            <a
                 href="{{ url_for('relatorios.relatorios') }}"
                 class="{% if request.endpoint.startswith('relatorios.') %}active{% endif %}"
             >
                 Relatório
             </a>
 
+            {% if usuario_atual and usuario_atual.is_admin %}
+            <a
+                href="{{ url_for('usuarios.usuarios') }}"
+                class="{% if request.endpoint.startswith('usuarios.') %}active{% endif %}"
+            >
+                Usuários
+            </a>
+            {% endif %}
+
         </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <span class="sidebar-avatar" aria-hidden="true">{{ usuario_atual.nome_usuario[0]|upper if usuario_atual and usuario_atual.nome_usuario else 'U' }}</span>
+                <span class="sidebar-user-name">{{ usuario_atual.nome_usuario if usuario_atual else '' }}</span>
+                <button type="button" class="theme-toggle sidebar-theme-toggle" aria-label="Ativar tema escuro" title="Ativar tema escuro">
+                    <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+                </button>
+            </div>
+
+            <form class="sidebar-logout" method="post" action="{{ url_for('auth.sair') }}">
+                <button type="submit" class="sidebar-action"><span aria-hidden="true">↪</span> Sair</button>
+            </form>
+        </div>
 
     </aside>
 
@@ -87,11 +109,6 @@
 
             <div class="topbar-actions">
                 {% block header_actions %}{% endblock %}
-            </div>
-
-            <div class="user-session">
-                <span>{{ usuario_atual.nome_usuario if usuario_atual else '' }}</span>
-                <form method="post" action="{{ url_for('auth.sair') }}"><button type="submit">Sair</button></form>
             </div>
 
         </header>

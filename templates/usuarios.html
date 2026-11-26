@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Usuários - TI Manager{% endblock %}
+{% block page_title %}Usuários{% endblock %}
+{% block content %}
+<div class="user-admin-page">
+    <section class="page-intro">
+        <div><span class="page-eyebrow">ADMINISTRAÇÃO</span><h2>Contas e permissões</h2><p>Gerencie quem pode entrar no sistema e quais contas têm acesso administrativo.</p></div>
+        <div class="page-intro-mark" aria-hidden="true">♙</div>
+    </section>
+
+    <section class="list-panel user-create-panel">
+        <div class="list-panel-heading"><div><h2>Criar uma conta</h2><p>Contas novas começam ativas e comuns, a menos que você conceda privilégios de administrador.</p></div></div>
+        <form method="post" action="{{ url_for('usuarios.criar_usuario') }}" class="user-create-form">
+            <label>Nome de usuário<input type="text" name="nome_usuario" minlength="3" maxlength="80" autocomplete="off" required></label>
+            <label>Senha inicial<input type="password" name="senha" minlength="8" autocomplete="new-password" required></label>
+            <label class="user-admin-checkbox"><input type="checkbox" name="is_admin"> Administrador</label>
+            <button type="submit" class="btn">Criar usuário</button>
+        </form>
+    </section>
+
+    <section class="list-panel">
+        <div class="list-panel-heading"><div><h2>Usuários cadastrados</h2><p>Desativar uma conta encerra o acesso no próximo pedido e impede novos logins.</p></div><span class="list-total">{{ contas|length }} {{ 'conta' if contas|length == 1 else 'contas' }}</span></div>
+        <div class="table-container user-table-container">
+            <table>
+                <thead><tr><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Criado em</th><th>Ações</th></tr></thead>
+                <tbody>
+                    {% for conta in contas %}
+                    <tr>
+                        <td><strong>{{ conta.nome_usuario }}</strong>{% if conta.id == usuario_atual.id %}<small class="cell-secondary">Sua conta</small>{% endif %}</td>
+                        <td><span class="status-pill {{ 'status-open' if conta.is_admin else 'status-muted' }}"><i></i>{{ 'Administrador' if conta.is_admin else 'Comum' }}</span></td>
+                        <td><span class="status-pill {{ 'status-done' if conta.is_active else 'status-empty' }}"><i></i>{{ 'Ativa' if conta.is_active else 'Desativada' }}</span></td>
+                        <td>{{ conta.criado_em.strftime('%d/%m/%Y') if conta.criado_em else '—' }}</td>
+                        <td>
+                            <div class="user-row-actions">
+                                {% if conta.is_active %}
+                                <form method="post" action="{{ url_for('usuarios.alterar_usuario', usuario_id=conta.id) }}"><input type="hidden" name="acao" value="desativar"><button class="btn btn-secondary user-action-button" type="submit" {% if conta.id == usuario_atual.id %}disabled title="Você não pode desativar sua própria conta"{% endif %}>Desativar</button></form>
+                                {% else %}
+                                <form method="post" action="{{ url_for('usuarios.alterar_usuario', usuario_id=conta.id) }}"><input type="hidden" name="acao" value="ativar"><button class="btn btn-secondary user-action-button" type="submit">Ativar</button></form>
+                                {% endif %}
+                                {% if conta.is_admin %}
+                                <form method="post" action="{{ url_for('usuarios.alterar_usuario', usuario_id=conta.id) }}"><input type="hidden" name="acao" value="remover_admin"><button class="btn btn-secondary user-action-button" type="submit" {% if conta.id == usuario_atual.id %}disabled title="Você não pode remover seu próprio perfil"{% endif %}>Remover admin</button></form>
+                                {% else %}
+                                <form method="post" action="{{ url_for('usuarios.alterar_usuario', usuario_id=conta.id) }}"><input type="hidden" name="acao" value="tornar_admin"><button class="btn btn-secondary user-action-button" type="submit">Tornar admin</button></form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="table-empty-row">Nenhuma conta cadastrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

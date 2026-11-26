@@ -6,6 +6,63 @@ from pathlib import Path
 from database import db
 
 
+def adicionar_permissao_admin_usuario():
+    """Adiciona a permissão administrativa às contas existentes."""
+    conexao = db.engine.raw_connection()
+    cursor = conexao.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT name FROM sqlite_master "
+            "WHERE type = 'table' AND name = 'usuarios'"
+        )
+        if not cursor.fetchone():
+            return
+
+        cursor.execute("PRAGMA table_info(usuarios)")
+        colunas = {coluna[1] for coluna in cursor.fetchall()}
+        if "is_admin" not in colunas:
+            cursor.execute(
+                "ALTER TABLE usuarios ADD COLUMN is_admin "
+                "BOOLEAN NOT NULL DEFAULT 0"
+            )
+            conexao.commit()
+    except Exception:
+        conexao.rollback()
+        raise
+    finally:
+        cursor.close()
+        conexao.close()
+
+
+def adicionar_status_ativo_usuario():
+    """Adiciona o estado ativo/inativo às contas existentes."""
+    conexao = db.engine.raw_connection()
+    cursor = conexao.cursor()
+    try:
+        cursor.execute(
+            "SELECT name FROM sqlite_master "
+            "WHERE type = 'table' AND name = 'usuarios'"
+        )
+        if not cursor.fetchone():
+            return
+
+        cursor.execute("PRAGMA table_info(usuarios)")
+        colunas = {coluna[1] for coluna in cursor.fetchall()}
+        if "is_active" not in colunas:
+            cursor.execute(
+                "ALTER TABLE usuarios ADD COLUMN is_active "
+                "BOOLEAN NOT NULL DEFAULT 1"
+            )
+            conexao.commit()
+    except Exception:
+        conexao.rollback()
+        raise
+    finally:
+        cursor.close()
+        conexao.close()
+
+
 def adicionar_observacao_maquina():
     """Adiciona observações às máquinas já cadastradas."""
     conexao = db.engine.raw_connection()

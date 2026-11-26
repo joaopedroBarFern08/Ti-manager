@@ -1,177 +1,103 @@
 {% extends "base.html" %}
 
-{% block title %}Saída de Estoque - TI Manager{% endblock %}
-{% block page_title %}Saída de Estoque{% endblock %}
+{% if tipo_saida == 'maquina' %}
+    {% set titulo_saida = 'Saída de máquina' %}
+    {% set destino_volta = url_for('maquinas.maquinas') %}
+{% else %}
+    {% set titulo_saida = 'Saída de estoque' %}
+    {% set destino_volta = url_for('estoque.estoque') %}
+{% endif %}
+
+{% block title %}{{ titulo_saida }} - TI Manager{% endblock %}
+{% block page_title %}{{ titulo_saida }}{% endblock %}
+{% block header_actions %}<a href="{{ destino_volta }}" class="btn btn-secondary">← Voltar</a>{% endblock %}
 
 {% block content %}
-<div class="saida-page">
-    <section class="saida-intro">
-        <div class="saida-intro-icon">↗</div>
+<div class="saida-page operational-page">
+    <section class="saida-intro page-intro">
+        <div class="saida-intro-icon" aria-hidden="true">↗</div>
         <div>
-            <span class="saida-eyebrow">Movimentação avulsa</span>
-            <h2>Registrar uma entrega</h2>
-            <p>Registre a saída de uma máquina ou de um produto com estoque.</p>
+            <span class="saida-eyebrow">{{ 'Entrega de equipamento' if tipo_saida == 'maquina' else 'Movimentação de estoque' }}</span>
+            <h2>{{ 'Registrar saída de máquina' if tipo_saida == 'maquina' else 'Registrar saída de item' }}</h2>
+            <p>{{ 'Informe quem recebeu o equipamento e o setor de destino.' if tipo_saida == 'maquina' else 'Registre a quantidade retirada e para quem foi entregue.' }}</p>
         </div>
     </section>
 
+    {% if tipo_saida == 'maquina' %}
     <form method="POST" action="{{ url_for('estoque.saida_maquina') }}" class="form saida-form saida-machine-form">
-        <div class="saida-form-heading">
-            <span>Saída de máquina</span>
-            <small>A máquina passará para o status Ativo.</small>
-        </div>
-
+        <div class="saida-form-heading"><span>Entrega de máquina</span><small>Após a confirmação, o equipamento passa para o status Ativo.</small></div>
         {% if maquinas_em_estoque %}
         <div class="form-group saida-product-field saida-machine-field">
             <label for="maquina_busca">Máquina</label>
-            <input type="text" id="maquina_busca" placeholder="Digite uma inicial, patrimônio ou modelo..." autocomplete="off" required>
+            <input type="text" id="maquina_busca" placeholder="Digite patrimônio, identificador ou modelo..." autocomplete="off" required>
             <input type="hidden" id="maquina_id" name="maquina_id">
             <div class="saida-sugestoes saida-maquina-sugestoes" aria-live="polite"></div>
             <small class="saida-selected-product" id="maquina-selecionada">Nenhuma máquina selecionada.</small>
         </div>
-
         <div class="saida-fields-row saida-machine-fields">
-            <div class="form-group">
-                <label for="setor-destino">Setor de destino</label>
-                <input type="text" id="setor-destino" name="setor" maxlength="100" placeholder="Ex.: Suporte" required>
-            </div>
-            <div class="form-group">
-                <label for="usuario-destino">Usuário (opcional)</label>
-                <input type="text" id="usuario-destino" name="usuario" maxlength="100" placeholder="Nome de quem recebeu">
-            </div>
+            <div class="form-group"><label for="setor-destino">Setor de destino</label><input type="text" id="setor-destino" name="setor" maxlength="100" placeholder="Ex.: Suporte" required></div>
+            <div class="form-group"><label for="usuario-destino">Usuário (opcional)</label><input type="text" id="usuario-destino" name="usuario" maxlength="100" placeholder="Nome de quem recebeu"></div>
         </div>
-
-        <div class="saida-form-footer">
-            <small>O setor é obrigatório; o usuário pode ficar em branco.</small>
-            <button type="submit" class="btn">Confirmar saída da máquina</button>
-        </div>
+        <div class="saida-form-footer"><small>O setor é obrigatório; o usuário pode ficar em branco.</small><button type="submit" class="btn">Confirmar saída da máquina</button></div>
         {% else %}
-        <div class="saida-history-empty">
-            <span>✓</span>
-            <div><strong>Nenhuma máquina disponível</strong><p>Cadastre ou retorne uma máquina ao estoque para registrar uma entrega.</p></div>
-        </div>
+        <div class="saida-history-empty"><span>✓</span><div><strong>Nenhuma máquina disponível</strong><p>Cadastre ou retorne uma máquina ao estoque para registrar uma entrega.</p></div></div>
         {% endif %}
     </form>
 
-    <form method="POST" class="form saida-form" data-peca-autocomplete>
-        <div class="saida-form-heading">
-            <span>Saída de produto</span>
-            <small>A data e o horário são registrados automaticamente.</small>
-        </div>
-
+    <section class="saida-history">
+        <div class="saida-history-heading"><div><span class="saida-eyebrow">Entregas de equipamentos</span><h2>Histórico de saídas de máquinas</h2></div><span>{{ saidas_maquinas|length }} registro(s)</span></div>
+        {% if saidas_maquinas %}
+        <div class="table-container"><table>
+            <thead><tr><th>Máquina</th><th>Setor</th><th>Usuário recebido</th><th>Registrado por</th><th>Data da saída</th></tr></thead>
+            <tbody>
+                {% for saida in saidas_maquinas %}
+                {% set destino = saida.detalhes.split('; usuário: ', 1) if saida.detalhes else [] %}
+                <tr><td><strong>{{ saida.resumo|replace('Entregou a máquina ', '') }}</strong></td><td>{{ destino[0]|replace('Setor: ', '') if destino else '—' }}</td><td>{% if destino|length > 1 and destino[1].rstrip('.') != 'não informado' %}{{ destino[1].rstrip('.') }}{% else %}—{% endif %}</td><td>{{ saida.usuario }}</td><td>{{ saida.data_hora.strftime('%d/%m/%Y %H:%M') }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table></div>
+        {% else %}
+        <div class="saida-history-empty"><span>↗</span><div><strong>Nenhuma máquina entregue ainda</strong><p>As próximas saídas aparecerão neste histórico.</p></div></div>
+        {% endif %}
+    </section>
+    {% else %}
+    <form method="POST" action="{{ url_for('estoque.saida', tipo='estoque') }}" class="form saida-form" data-peca-autocomplete>
+        <div class="saida-form-heading"><span>Saída de produto</span><small>O saldo será atualizado assim que confirmar.</small></div>
         <div class="form-group saida-product-field">
-            <label for="peca_nome">Produto</label>
+            <label for="peca_nome">Item do estoque</label>
             <input type="text" id="peca_nome" name="peca_nome" placeholder="Comece a digitar o nome do produto..." autocomplete="off" required>
             <input type="hidden" id="peca_id" name="peca_id">
             <div class="saida-sugestoes" aria-live="polite"></div>
             <small class="saida-selected-product">Nenhum produto selecionado.</small>
         </div>
-
         <div class="saida-fields-row">
-            <div class="form-group">
-                <label for="destinatario">Entregue para</label>
-                <input type="text" id="destinatario" name="destinatario" placeholder="Nome da pessoa ou setor" maxlength="100" required>
-            </div>
-            <div class="form-group saida-quantity-field">
-                <label for="quantidade">Quantidade</label>
-                <input type="number" id="quantidade" name="quantidade" min="1" value="1" required>
-            </div>
+            <div class="form-group"><label for="destinatario">Entregue para</label><input type="text" id="destinatario" name="destinatario" placeholder="Nome da pessoa ou setor" maxlength="100" required></div>
+            <div class="form-group saida-quantity-field"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" name="quantidade" min="1" value="1" required></div>
         </div>
-
-        <div class="saida-form-footer">
-            <small>O saldo do produto será reduzido ao confirmar a entrega.</small>
-            <button type="submit" class="btn">Confirmar saída</button>
-        </div>
+        <div class="saida-form-footer"><small>Você pode conferir o histórico de movimentações nesta página.</small><button type="submit" class="btn">Confirmar saída do item</button></div>
     </form>
 
     <section class="saida-history">
-        <div class="saida-history-heading">
-            <div>
-                <span class="saida-eyebrow">Entregas de equipamentos</span>
-                <h2>Histórico de saídas de máquinas</h2>
-            </div>
-            <span>{{ saidas_maquinas|length }} registro(s)</span>
-        </div>
-
-        {% if saidas_maquinas %}
-        <div class="table-container">
-            <table>
-                <thead><tr><th>Máquina</th><th>Setor</th><th>Usuário recebido</th><th>Registrado por</th><th>Data da saída</th></tr></thead>
-                <tbody>
-                    {% for saida in saidas_maquinas %}
-                    {% set destino = saida.detalhes.split('; usuário: ', 1) if saida.detalhes else [] %}
-                    <tr>
-                        <td><strong>{{ saida.resumo|replace('Entregou a máquina ', '') }}</strong></td>
-                        <td>{{ destino[0]|replace('Setor: ', '') if destino else '—' }}</td>
-                        <td>{% if destino|length > 1 and destino[1].rstrip('.') != 'não informado' %}{{ destino[1].rstrip('.') }}{% else %}—{% endif %}</td>
-                        <td>{{ saida.usuario }}</td>
-                        <td>{{ saida.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="saida-history-empty">
-            <span>↗</span>
-            <div><strong>Nenhuma máquina entregue ainda</strong><p>As próximas saídas de máquinas aparecerão aqui.</p></div>
-        </div>
-        {% endif %}
-    </section>
-
-    <section class="saida-history">
-        <div class="saida-history-heading">
-            <div>
-                <span class="saida-eyebrow">Registros recentes</span>
-                <h2>Histórico de movimentações</h2>
-            </div>
-            <span>{{ movimentacoes|length }} registro(s)</span>
-        </div>
-
+        <div class="saida-history-heading"><div><span class="saida-eyebrow">Registros recentes</span><h2>Histórico de movimentações de estoque</h2></div><span>{{ movimentacoes|length }} registro(s)</span></div>
         {% if movimentacoes %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Produto</th>
-                        <th>Movimentação</th>
-                        <th>Entregue para/por</th>
-                        <th>Quantidade</th>
-                        <th>Data da saída</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for movimentacao in movimentacoes %}
-                    <tr>
-                        <td><strong>{{ movimentacao.peca.nome }}</strong></td>
-                        <td>
-                            {% if movimentacao.tipo == "entrada" %}
-                                <span class="movimentacao-badge movimentacao-entrada">Devolução</span>
-                            {% else %}
-                                <span class="movimentacao-badge movimentacao-saida">Saída</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if movimentacao.destinatario %}
-                                {{ movimentacao.destinatario }}
-                            {% elif movimentacao.atendimento_id %}
-                                <a class="saida-attendance-link" href="{{ url_for('atendimentos.detalhe_atendimento', id=movimentacao.atendimento_id) }}">Atendimento #{{ movimentacao.atendimento_id }}</a>
-                            {% else %}
-                                {{ movimentacao.motivo or "Não informado" }}
-                            {% endif %}
-                        </td>
-                        <td>{{ movimentacao.quantidade }} un.</td>
-                        <td>{{ movimentacao.data.strftime('%d/%m/%Y %H:%M') if movimentacao.data else "—" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <div class="table-container"><table>
+            <thead><tr><th>Produto</th><th>Movimentação</th><th>Entregue para/por</th><th>Quantidade</th><th>Data</th></tr></thead>
+            <tbody>
+                {% for movimentacao in movimentacoes %}
+                <tr>
+                    <td><strong>{{ movimentacao.peca.nome }}</strong></td>
+                    <td>{% if movimentacao.tipo == 'entrada' %}<span class="movimentacao-badge movimentacao-entrada">Devolução</span>{% else %}<span class="movimentacao-badge movimentacao-saida">Saída</span>{% endif %}</td>
+                    <td>{% if movimentacao.destinatario %}{{ movimentacao.destinatario }}{% elif movimentacao.atendimento_id %}<a class="saida-attendance-link" href="{{ url_for('atendimentos.detalhe_atendimento', id=movimentacao.atendimento_id) }}">Atendimento #{{ movimentacao.atendimento_id }}</a>{% else %}{{ movimentacao.motivo or 'Não informado' }}{% endif %}</td>
+                    <td>{{ movimentacao.quantidade }} un.</td>
+                    <td>{{ movimentacao.data.strftime('%d/%m/%Y %H:%M') if movimentacao.data else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table></div>
         {% else %}
-        <div class="saida-history-empty">
-            <span>↗</span>
-            <div><strong>Nenhuma movimentação registrada</strong><p>As entregas e devoluções aparecerão aqui.</p></div>
-        </div>
+        <div class="saida-history-empty"><span>↗</span><div><strong>Nenhuma movimentação registrada</strong><p>As saídas, entradas e devoluções aparecerão neste histórico.</p></div></div>
         {% endif %}
     </section>
+    {% endif %}
 </div>
 {% endblock %}

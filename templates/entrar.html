@@ -5,9 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrar - TI Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>document.documentElement.dataset.theme = localStorage.getItem('ti-manager-theme') || 'light';</script>
 </head>
 <body class="auth-page">
     <main class="auth-card">
+        <button type="button" class="theme-toggle auth-theme-toggle" aria-label="Ativar tema escuro" title="Alternar tema">
+            <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+            <span class="theme-toggle-label">Tema escuro</span>
+        </button>
         <span class="auth-eyebrow">TI MANAGER</span>
         <h1>Entrar</h1>
         <p>Acesse com sua conta individual para registrar suas ações.</p>
@@ -24,5 +29,6 @@
         </form>
         <a href="{{ url_for('auth.cadastro') }}">Criar conta</a>
     </main>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

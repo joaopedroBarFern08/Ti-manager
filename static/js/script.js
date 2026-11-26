@@ -51,6 +51,28 @@ if (formularioAtendimento) {
 
 document.addEventListener("DOMContentLoaded", function () {
 
+    const themeButton = document.querySelector(".theme-toggle");
+    const themeRoot = document.documentElement;
+
+    function updateThemeButton(theme) {
+        if (!themeButton) return;
+        const dark = theme === "dark";
+        themeButton.setAttribute("aria-label", dark ? "Ativar tema claro" : "Ativar tema escuro");
+        themeButton.setAttribute("aria-pressed", String(dark));
+        themeButton.title = dark ? "Ativar tema claro" : "Ativar tema escuro";
+        themeButton.querySelector(".theme-toggle-icon").textContent = dark ? "☀" : "☾";
+        const themeLabel = themeButton.querySelector(".theme-toggle-label");
+        if (themeLabel) themeLabel.textContent = dark ? "Tema claro" : "Tema escuro";
+    }
+
+    updateThemeButton(themeRoot.dataset.theme || "light");
+    themeButton?.addEventListener("click", function () {
+        const nextTheme = themeRoot.dataset.theme === "dark" ? "light" : "dark";
+        themeRoot.dataset.theme = nextTheme;
+        localStorage.setItem("ti-manager-theme", nextTheme);
+        updateThemeButton(nextTheme);
+    });
+
     document.querySelectorAll("[data-table-search]").forEach(function (input) {
         const table = document.getElementById(input.dataset.tableSearch);
         if (!table) return;
@@ -61,6 +83,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const count = document.querySelector(
             `[data-search-count="${input.dataset.tableSearch}"]`
         );
+        const filters = Array.from(document.querySelectorAll(
+            `[data-table-filter="${input.dataset.tableSearch}"]`
+        ));
         const noResultsRow = document.createElement("tr");
         noResultsRow.className = "table-search-empty";
         noResultsRow.hidden = true;
@@ -77,22 +102,40 @@ document.addEventListener("DOMContentLoaded", function () {
             let visibleCount = 0;
 
             rows.forEach(function (row) {
-                const matches = normalize(row.innerText).includes(query);
+                const matchesQuery = normalize(row.innerText).includes(query);
+                const matchesFilters = filters.every(function (filter) {
+                    return !filter.value || row.dataset[filter.dataset.filterField] === filter.value;
+                });
+                const matches = matchesQuery && matchesFilters;
                 row.hidden = !matches;
                 if (matches) visibleCount++;
             });
 
-            if (initialEmptyRow) initialEmptyRow.hidden = Boolean(query);
-            noResultsRow.hidden = !query || visibleCount > 0;
+            const hasActiveFilter = filters.some(filter => filter.value);
+            if (initialEmptyRow) initialEmptyRow.hidden = Boolean(query) || hasActiveFilter;
+            noResultsRow.hidden = (!query && !hasActiveFilter) || visibleCount > 0;
             if (count) {
-                count.textContent = query
+                count.textContent = query || hasActiveFilter
                     ? `${visibleCount} resultado${visibleCount === 1 ? "" : "s"}`
                     : `${rows.length} registro${rows.length === 1 ? "" : "s"}`;
             }
         }
 
         input.addEventListener("input", filterRows);
+        filters.forEach(filter => filter.addEventListener("change", filterRows));
         filterRows();
+    });
+
+    document.querySelectorAll("[data-stock-filter]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const filter = document.querySelector(
+                '[data-table-filter="estoque-table"][data-filter-field="status"]'
+            );
+            if (!filter) return;
+            filter.value = button.dataset.stockFilter;
+            filter.dispatchEvent(new Event("change", { bubbles: true }));
+            document.getElementById("estoque-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
     });
 
     const botoes = document.querySelectorAll(".btn-qtd");

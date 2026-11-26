@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
-from datetime import datetime
+from datetime import datetime, timedelta
 import csv
 from pathlib import Path
 
@@ -23,10 +23,30 @@ def atendimentos():
     atendimentos = Atendimento.query.filter_by(visivel=True).order_by(
         Atendimento.data_entrada.desc()
     ).all()
+    total_atendimentos = len(atendimentos)
+    atendimentos_abertos = sum(
+        atendimento.status != "Finalizado" for atendimento in atendimentos
+    )
+    aguardando_peca = sum(
+        atendimento.status == "Aguardando peça" for atendimento in atendimentos
+    )
+    atendimentos_finalizados = total_atendimentos - atendimentos_abertos
+    limite_acompanhamento = datetime.now() - timedelta(days=7)
+    atendimentos_abertos_ha_mais_de_7_dias = sum(
+        atendimento.status != "Finalizado"
+        and atendimento.data_entrada <= limite_acompanhamento
+        for atendimento in atendimentos
+    )
 
     return render_template(
         "atendimentos.html",
-        atendimentos=atendimentos
+        atendimentos=atendimentos,
+        total_atendimentos=total_atendimentos,
+        atendimentos_abertos=atendimentos_abertos,
+        aguardando_peca=aguardando_peca,
+        atendimentos_finalizados=atendimentos_finalizados,
+        atendimentos_abertos_ha_mais_de_7_dias=atendimentos_abertos_ha_mais_de_7_dias,
+        limite_acompanhamento=limite_acompanhamento,
     )
 
 

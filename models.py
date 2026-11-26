@@ -241,6 +241,8 @@ class Usuario(db.Model):
     nome_usuario = db.Column(db.String(80), nullable=False, unique=True, index=True)
     senha_hash = db.Column(db.String(255), nullable=False)
     criado_em = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
 
 
 class RegistroAuditoria(db.Model):

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}
+Atendimentos - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Atendimentos
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 20px;">
+
+    <a
+        href="{{ url_for('atendimentos.novo_atendimento') }}"
+        class="btn"
+    >
+        + Novo atendimento
+    </a>
+
+</div>
+
+<div class="table-search">
+    <label for="search-atendimentos">Buscar atendimento</label>
+    <input id="search-atendimentos" type="search" data-table-search="atendimentos-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
+    <span class="table-search-count" data-search-count="atendimentos-table" aria-live="polite"></span>
+</div>
+
+<div class="table-container">
+
+    <table id="atendimentos-table" data-search-empty="Nenhum atendimento corresponde à busca.">
+
+        <thead>
+
+            <tr>
+                <th>Atendimento</th>
+                <th>Máquina</th>
+                <th>Problema relatado</th>
+                <th>Status</th>
+                <th>Data de entrada</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for atendimento in atendimentos %}
+
+            <tr
+                class="linha-atendimento"
+                onclick=window.location.href="{{ url_for('atendimentos.detalhe_atendimento', id=atendimento.id) }}"
+            >
+
+                <td>
+                    #{{ atendimento.id }}
+                </td>
+
+                <td>
+                    {{ atendimento.maquina.identificador }}
+                </td>
+
+                <td>
+                    {{ atendimento.problema_relatado }}
+                </td>
+
+                <td>
+                    {{ atendimento.status }}
+                </td>
+
+                <td>
+                    {{ atendimento.data_entrada.strftime('%d/%m/%Y %H:%M') }}
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+
+                <td colspan="5" class="table-empty-row">
+                    Nenhum atendimento registrado.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

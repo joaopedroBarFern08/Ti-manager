@@ -1,105 +1,71 @@
 {% extends "base.html" %}
 
-{% block title %}
-Máquinas - TI Manager
-{% endblock %}
-
-{% block page_title %}
-Máquinas
+{% block title %}Máquinas - TI Manager{% endblock %}
+{% block page_title %}Máquinas{% endblock %}
+{% block header_actions %}
+    <a href="{{ url_for('maquinas.nova_maquina') }}" class="btn"><span aria-hidden="true">+</span> Nova máquina</a>
 {% endblock %}
 
 {% block content %}
+<div class="operational-page">
+    <section class="page-intro">
+        <div>
+            <span class="page-eyebrow">PARQUE DE EQUIPAMENTOS</span>
+            <h2>Encontre e gerencie suas máquinas</h2>
+            <p>Consulte quem está usando cada equipamento e acompanhe o que está disponível em estoque.</p>
+        </div>
+        <div class="page-intro-mark" aria-hidden="true">▣</div>
+    </section>
 
-<div style="margin-bottom: 20px;">
+    <section class="overview-cards" aria-label="Resumo das máquinas">
+        <article class="overview-card overview-indigo"><span>Total de máquinas</span><strong>{{ maquinas|length }}</strong><small>Equipamentos cadastrados</small></article>
+        <article class="overview-card overview-blue"><span>Ativas</span><strong>{{ maquinas_por_status['Ativo'] }}</strong><small>Em uso pela equipe</small></article>
+        <article class="overview-card overview-green"><span>Em estoque</span><strong>{{ maquinas_por_status['Em estoque'] }}</strong><small>Disponíveis para uso</small></article>
+        <article class="overview-card overview-slate"><span>Inativas</span><strong>{{ maquinas_por_status['Inativo'] }}</strong><small>Fora de operação</small></article>
+    </section>
 
-    <a
-        href="{{ url_for('maquinas.nova_maquina') }}"
-        class="btn"
-    >
-        + Nova máquina
-    </a>
-
+    <section class="list-panel">
+        <div class="list-panel-heading">
+            <div><h2>Inventário de máquinas</h2><p>Filtre por situação, modelo ou empresa. Selecione uma linha para ver os detalhes.</p></div>
+            <div class="list-heading-actions">
+                <span class="list-total">{{ maquinas|length }} {{ 'equipamento' if maquinas|length == 1 else 'equipamentos' }}</span>
+                <a href="{{ url_for('estoque.saida', tipo='maquina') }}" class="btn btn-secondary">Registrar saída <span aria-hidden="true">→</span></a>
+            </div>
+        </div>
+        <div class="list-toolbar list-toolbar-wide">
+            <div class="table-search list-search">
+                <label for="search-maquinas">Buscar máquina</label>
+                <input id="search-maquinas" type="search" data-table-search="maquinas-table" placeholder="Patrimônio, modelo, usuário ou setor..." autocomplete="off">
+                <span class="table-search-count" data-search-count="maquinas-table" aria-live="polite"></span>
+            </div>
+            <label class="list-filter">Status
+                <select data-table-filter="maquinas-table" data-filter-field="status"><option value="">Todos</option><option>Ativo</option><option>Em estoque</option><option>Inativo</option></select>
+            </label>
+            <label class="list-filter">Modelo
+                <select data-table-filter="maquinas-table" data-filter-field="model"><option value="">Todos os modelos</option>{% for modelo in modelos %}<option value="{{ modelo }}">{{ modelo }}</option>{% endfor %}</select>
+            </label>
+            <label class="list-filter">Empresa
+                <select data-table-filter="maquinas-table" data-filter-field="company"><option value="">Todas</option>{% for empresa in empresas %}<option value="{{ empresa }}">{{ empresa }}</option>{% endfor %}</select>
+            </label>
+        </div>
+        <div class="table-container">
+            <table id="maquinas-table" data-search-empty="Nenhuma máquina corresponde aos filtros.">
+                <thead><tr><th>Equipamento</th><th>Modelo</th><th>Usuário</th><th>Setor</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for maquina in maquinas %}
+                    <tr class="linha-atendimento" data-status="{{ maquina.status_maquina }}" data-model="{{ maquina.modelo or '' }}" data-company="{{ maquina.empresa or '' }}" onclick="window.location.href='{{ url_for('maquinas.detalhe_maquina', id=maquina.id) }}'">
+                        <td><span class="machine-id">{{ maquina.identificador }}</span><small class="cell-secondary">{{ maquina.empresa or 'Empresa não informada' }} · {{ maquina.tipo|capitalize if maquina.tipo else 'Tipo não informado' }}</small></td>
+                        <td>{{ maquina.modelo or 'Não informado' }}</td>
+                        <td>{{ maquina.usuario or 'Sem usuário' }}</td>
+                        <td>{{ maquina.setor or 'Sem setor' }}</td>
+                        <td><span class="status-pill {{ 'status-done' if maquina.status_maquina == 'Ativo' else ('status-stock' if maquina.status_maquina == 'Em estoque' else 'status-muted') }}"><i></i>{{ maquina.status_maquina }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="table-empty-row"><div class="list-empty"><strong>Nenhuma máquina cadastrada</strong><span>Cadastre um equipamento para montar seu inventário.</span><a href="{{ url_for('maquinas.nova_maquina') }}" class="btn">+ Nova máquina</a></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
-
-<div class="table-search">
-    <label for="search-maquinas">Buscar máquina</label>
-    <input id="search-maquinas" type="search" data-table-search="maquinas-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
-    <span class="table-search-count" data-search-count="maquinas-table" aria-live="polite"></span>
-</div>
-
-<div class="table-container">
-
-    <table id="maquinas-table" data-search-empty="Nenhuma máquina corresponde à busca.">
-
-        <thead>
-
-            <tr>
-
-                <th>Identificador</th>
-                <th>Modelo</th>
-                <th>Usuário</th>
-                <th>Setor</th>
-                <th>Observação</th>
-                <th>Status</th>
-
-            </tr>
-
-        </thead>
-
-
-        <tbody>
-
-
-            {% for maquina in maquinas %}
-
-            <tr
-            class="linha-atendimento"
-            onclick=window.location.href="{{ url_for('maquinas.detalhe_maquina', id=maquina.id) }}"
-            >
-
-                <td>
-                    {{ maquina.identificador }}
-                </td>
-
-                <td>
-                    {{ maquina.modelo or "Não informado" }}
-                </td>
-
-                <td>
-                    {{ maquina.usuario or "Não informado" }}
-                </td>
-
-                <td>
-                    {{ maquina.setor or "Não informado" }}
-                </td>
-
-                <td>
-                    {{ maquina.observacao or "Não informado" }}
-                </td>
-
-                <td>
-                    {{ maquina.status_maquina }}
-                </td>
-
-            </tr>
-
-            {% else %}
-
-            <tr>
-
-                <td colspan="6" class="table-empty-row">
-                    Nenhuma máquina cadastrada.
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</div>
-
-
 {% endblock %}

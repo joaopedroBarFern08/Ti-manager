@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}
+Estoque - TI Manager
+{% endblock %}
+
+{% block page_title %}
+Estoque
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 20px;">
+
+    <a
+        href="{{ url_for('estoque.nova_peca') }}"
+        class="btn"
+    >
+        + Novo Item
+    </a>
+
+</div>
+
+<div class="table-search">
+    <label for="search-estoque">Buscar no estoque</label>
+    <input id="search-estoque" type="search" data-table-search="estoque-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
+    <span class="table-search-count" data-search-count="estoque-table" aria-live="polite"></span>
+</div>
+
+<div class="table-container">
+
+    <table id="estoque-table" data-search-empty="Nenhum item corresponde à busca.">
+
+        <thead>
+
+            <tr>
+                <th>Item</th>
+                <th>Categoria</th>
+                <th>Quantidade</th>
+                <th>Mínimo</th>
+                <th>Status</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for peca in pecas %}
+
+            <tr
+                class="linha-atendimento"
+                onclick="window.location.href='{{ url_for(
+                    'estoque.editar_peca',
+                    id=peca.id
+                ) }}'"
+            >
+
+                <td>
+                    {{ peca.nome }}
+                </td>
+
+                <td>
+                    {{ peca.categoria|capitalize if peca.categoria else "-" }}
+                </td>
+
+                <td>
+                    {{ peca.quantidade }}
+                </td>
+
+                <td>
+                    {{ peca.estoque_minimo }}
+                </td>
+
+                <td>
+
+                    {% if peca.quantidade == 0 %}
+
+                        <strong class="estoque-empty">
+                            Sem estoque
+                        </strong>
+
+                    {% elif peca.quantidade <= peca.estoque_minimo %}
+
+                        <strong class="estoque-low">
+                            Estoque baixo
+                        </strong>
+
+                    {% else %}
+
+                        Normal
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+            {% else %}
+
+            <tr>
+
+                <td colspan="5" class="table-empty-row">
+                    Nenhuma peça cadastrada.
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

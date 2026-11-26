@@ -5,18 +5,6 @@
 
 {% block content %}
 <div class="dashboard">
-    <section class="dashboard-hero">
-        <div>
-            <span class="dashboard-eyebrow">PAINEL DE CONTROLE</span>
-            <h2>Visão geral da operação</h2>
-            <p>Acompanhe os atendimentos, os equipamentos e o estoque em um só lugar.</p>
-        </div>
-
-        <a href="{{ url_for('atendimentos.novo_atendimento', proximo=url_for('dashboard.dashboard')) }}" class="dashboard-primary-action">
-            <span>+</span> Novo atendimento
-        </a>
-    </section>
-
     <section class="dashboard-stats">
         <article class="dashboard-stat stat-blue">
             <div class="stat-icon">
@@ -29,12 +17,24 @@
         </article>
 
         <article class="dashboard-stat stat-green">
-            <div class="stat-icon">▣</div>
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+                    <path d="m4.3 7.6 7.7 4.5 7.7-4.5M12 12.1V21" />
+                </svg>
+            </div>
             <div><span>Máquinas em estoque</span><strong>{{ maquinas_em_estoque }}</strong></div>
         </article>
 
         <article class="dashboard-stat stat-violet">
-            <div class="stat-icon">▤</div>
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 13v-1a8 8 0 0 1 16 0v1" />
+                    <rect x="3" y="12" width="4" height="7" rx="2" />
+                    <rect x="17" y="12" width="4" height="7" rx="2" />
+                    <path d="M17 19a5 5 0 0 1-5 3h-1" />
+                </svg>
+            </div>
             <div><span>Total de atendimentos</span><strong>{{ total_atendimentos }}</strong></div>
         </article>
 
@@ -46,6 +46,35 @@
         <article class="dashboard-stat stat-red">
             <div class="stat-icon">!</div>
             <div><span>Itens com estoque baixo</span><strong>{{ estoque_baixo|length }}</strong></div>
+        </article>
+
+        <article class="dashboard-panel quick-actions-panel">
+            <div class="dashboard-panel-heading">
+                <div>
+                    <span class="dashboard-panel-label">ATALHOS</span>
+                    <h2>Ações rápidas</h2>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a href="{{ url_for('atendimentos.novo_atendimento', proximo=url_for('dashboard.dashboard')) }}">
+                    <span class="quick-action-icon quick-violet">+</span>
+                    <span><strong>Novo atendimento</strong><small>Registrar uma solicitação</small></span>
+                    <b>→</b>
+                </a>
+
+                <a href="{{ url_for('maquinas.nova_maquina', proximo=url_for('dashboard.dashboard')) }}">
+                    <span class="quick-action-icon quick-blue">+</span>
+                    <span><strong>Nova máquina</strong><small>Cadastrar equipamento</small></span>
+                    <b>→</b>
+                </a>
+
+                <a href="{{ url_for('estoque.nova_peca', proximo=url_for('dashboard.dashboard')) }}">
+                    <span class="quick-action-icon quick-orange">+</span>
+                    <span><strong>Novo Item</strong><small>Atualizar o inventário</small></span>
+                    <b>→</b>
+                </a>
+            </div>
         </article>
     </section>
 
@@ -85,6 +114,33 @@
         {% endif %}
     </section>
 
+    <section class="dashboard-panel machine-movement-panel">
+        <div class="dashboard-panel-heading machine-movement-heading">
+            <div>
+                <span class="dashboard-panel-label">MOVIMENTAÇÃO DE MÁQUINAS</span>
+                <h2>Máquinas adicionadas e saídas</h2>
+                <p>Máquinas cadastradas, incluindo as que ainda estão em estoque, e saídas registradas.</p>
+            </div>
+        </div>
+
+        {% if total_movimentacoes_maquinas %}
+            <div class="machine-pie-layout">
+                <div
+                    class="machine-pie-chart"
+                    role="img"
+                    aria-label="Gráfico de pizza: {{ maquinas_adicionadas }} máquinas adicionadas e {{ saidas_maquinas_registradas }} saídas registradas"
+                    style="--added-share: {{ percentual_adicionadas }}%;"
+                ><span>{{ total_movimentacoes_maquinas }}<small>registros</small></span></div>
+                <ul class="machine-pie-legend">
+                    <li><i class="machine-pie-added"></i><span>Máquinas adicionadas</span><strong>{{ maquinas_adicionadas }}</strong></li>
+                    <li><i class="machine-pie-exit"></i><span>Saídas registradas</span><strong>{{ saidas_maquinas_registradas }}</strong></li>
+                </ul>
+            </div>
+        {% else %}
+            <div class="model-chart-empty">Ainda não há máquinas adicionadas ou saídas registradas no histórico.</div>
+        {% endif %}
+    </section>
+
     <section class="dashboard-grid">
         <article class="dashboard-panel stock-panel">
             <div class="dashboard-panel-heading">
@@ -119,34 +175,6 @@
             {% endif %}
         </article>
 
-        <article class="dashboard-panel quick-actions-panel">
-            <div class="dashboard-panel-heading">
-                <div>
-                    <span class="dashboard-panel-label">ATALHOS</span>
-                    <h2>Ações rápidas</h2>
-                </div>
-            </div>
-
-            <div class="quick-actions">
-                <a href="{{ url_for('atendimentos.novo_atendimento', proximo=url_for('dashboard.dashboard')) }}">
-                    <span class="quick-action-icon quick-violet">+</span>
-                    <span><strong>Novo atendimento</strong><small>Registrar uma solicitação</small></span>
-                    <b>→</b>
-                </a>
-
-                <a href="{{ url_for('maquinas.nova_maquina', proximo=url_for('dashboard.dashboard')) }}">
-                    <span class="quick-action-icon quick-blue">+</span>
-                    <span><strong>Nova máquina</strong><small>Cadastrar equipamento</small></span>
-                    <b>→</b>
-                </a>
-
-                <a href="{{ url_for('estoque.nova_peca', proximo=url_for('dashboard.dashboard')) }}">
-                    <span class="quick-action-icon quick-orange">+</span>
-                    <span><strong>Novo Item</strong><small>Atualizar o inventário</small></span>
-                    <b>→</b>
-                </a>
-            </div>
-        </article>
     </section>
 </div>
 {% endblock %}

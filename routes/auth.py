@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
+from functools import wraps
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import db
@@ -9,6 +10,16 @@ from auditoria import registrar_acao
 
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def administrador_requerido(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        usuario = db.session.get(Usuario, session.get("usuario_id"))
+        if not usuario or not usuario.is_active or not usuario.is_admin:
+            abort(403)
+        return view(*args, **kwargs)
+    return wrapped
 
 
 def destino_local(proximo):
@@ -29,6 +40,9 @@ def entrar():
         senha = request.form.get("senha", "")
         usuario = Usuario.query.filter_by(nome_usuario=nome_usuario).first()
         if usuario and check_password_hash(usuario.senha_hash, senha):
+            if not usuario.is_active:
+                flash("Esta conta está desativada. Fale com um administrador.", "error")
+                return render_template("entrar.html", proximo=proximo)
             session.clear()
             session["usuario_id"] = usuario.id
             registrar_acao("Acessou", "Sessão", None, "Entrou no TI Manager")
@@ -57,6 +71,8 @@ def cadastro():
             usuario = Usuario(
                 nome_usuario=nome_usuario,
                 senha_hash=generate_password_hash(senha),
+                is_admin=False,
+                is_active=True,
             )
             db.session.add(usuario)
             db.session.flush()

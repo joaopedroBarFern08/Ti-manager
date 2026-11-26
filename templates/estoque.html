@@ -1,117 +1,77 @@
 {% extends "base.html" %}
 
-{% block title %}
-Estoque - TI Manager
-{% endblock %}
-
-{% block page_title %}
-Estoque
+{% block title %}Estoque - TI Manager{% endblock %}
+{% block page_title %}Estoque{% endblock %}
+{% block header_actions %}
+    <a href="{{ url_for('estoque.nova_peca') }}" class="btn"><span aria-hidden="true">+</span> Novo item</a>
 {% endblock %}
 
 {% block content %}
+<div class="operational-page">
+    <section class="page-intro page-intro-stock">
+        <div>
+            <span class="page-eyebrow">PEÇAS E SUPRIMENTOS</span>
+            <h2>Estoque sob controle</h2>
+            <p>Veja o que está disponível e identifique rapidamente os itens que precisam de reposição.</p>
+        </div>
+        <div class="page-intro-mark" aria-hidden="true">▤</div>
+    </section>
 
-<div style="margin-bottom: 20px;">
+    {% if itens_estoque_baixo %}
+    <section class="inventory-alert" aria-label="Alerta de estoque baixo">
+        <span class="inventory-alert-icon" aria-hidden="true">!</span>
+        <div><strong>{{ itens_estoque_baixo }} {{ 'item precisa' if itens_estoque_baixo == 1 else 'itens precisam' }} de atenção</strong><p>{{ itens_sem_estoque }} sem saldo disponível. Confira os níveis antes de iniciar novos reparos.</p></div>
+        <button type="button" class="inventory-alert-action" data-stock-filter="baixo">Ver itens</button>
+    </section>
+    {% endif %}
 
-    <a
-        href="{{ url_for('estoque.nova_peca') }}"
-        class="btn"
-    >
-        + Novo Item
-    </a>
+    <section class="overview-cards" aria-label="Resumo do estoque">
+        <article class="overview-card overview-indigo"><span>Itens cadastrados</span><strong>{{ pecas|length }}</strong><small>Tipos de peças e suprimentos</small></article>
+        <article class="overview-card overview-blue"><span>Unidades disponíveis</span><strong>{{ unidades_disponiveis }}</strong><small>Saldo total do inventário</small></article>
+        <article class="overview-card overview-amber"><span>Estoque baixo</span><strong>{{ itens_estoque_baixo }}</strong><small>No mínimo ou abaixo dele</small></article>
+        <article class="overview-card overview-red"><span>Sem estoque</span><strong>{{ itens_sem_estoque }}</strong><small>Precisam de reposição</small></article>
+    </section>
 
-</div>
-
-<div class="table-search">
-    <label for="search-estoque">Buscar no estoque</label>
-    <input id="search-estoque" type="search" data-table-search="estoque-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
-    <span class="table-search-count" data-search-count="estoque-table" aria-live="polite"></span>
-</div>
-
-<div class="table-container">
-
-    <table id="estoque-table" data-search-empty="Nenhum item corresponde à busca.">
-
-        <thead>
-
-            <tr>
-                <th>Item</th>
-                <th>Categoria</th>
-                <th>Quantidade</th>
-                <th>Mínimo</th>
-                <th>Status</th>
-            </tr>
-
-        </thead>
-
-
-        <tbody>
-
-            {% for peca in pecas %}
-
-            <tr
-                class="linha-atendimento"
-                onclick="window.location.href='{{ url_for(
-                    'estoque.editar_peca',
-                    id=peca.id
-                ) }}'"
-            >
-
-                <td>
-                    {{ peca.nome }}
-                </td>
-
-                <td>
-                    {{ peca.categoria|capitalize if peca.categoria else "-" }}
-                </td>
-
-                <td>
-                    {{ peca.quantidade }}
-                </td>
-
-                <td>
-                    {{ peca.estoque_minimo }}
-                </td>
-
-                <td>
-
-                    {% if peca.quantidade == 0 %}
-
-                        <strong class="estoque-empty">
-                            Sem estoque
-                        </strong>
-
-                    {% elif peca.quantidade <= peca.estoque_minimo %}
-
-                        <strong class="estoque-low">
-                            Estoque baixo
-                        </strong>
-
+    <section class="list-panel">
+        <div class="list-panel-heading">
+            <div><h2>Itens do inventário</h2><p>Os itens que precisam de reposição aparecem primeiro. Selecione uma linha para editar.</p></div>
+            <div class="list-heading-actions">
+                <span class="list-total">{{ pecas|length }} {{ 'item' if pecas|length == 1 else 'itens' }}</span>
+                <a href="{{ url_for('estoque.saida', tipo='estoque') }}" class="btn btn-secondary">Registrar saída <span aria-hidden="true">→</span></a>
+            </div>
+        </div>
+        <div class="list-toolbar">
+            <div class="table-search list-search">
+                <label for="search-estoque">Buscar item</label>
+                <input id="search-estoque" type="search" data-table-search="estoque-table" placeholder="Nome ou categoria..." autocomplete="off">
+                <span class="table-search-count" data-search-count="estoque-table" aria-live="polite"></span>
+            </div>
+            <label class="list-filter">Situação
+                <select data-table-filter="estoque-table" data-filter-field="status"><option value="">Todas</option><option value="baixo">Estoque baixo</option><option value="sem">Sem estoque</option><option value="normal">Normal</option></select>
+            </label>
+            <label class="list-filter">Categoria
+                <select data-table-filter="estoque-table" data-filter-field="category"><option value="">Todas as categorias</option><option value="novo">Novo</option><option value="reparo">Reparo</option><option value="ferramenta">Ferramenta</option></select>
+            </label>
+        </div>
+        <div class="table-container">
+            <table id="estoque-table" data-search-empty="Nenhum item corresponde aos filtros.">
+                <thead><tr><th>Item</th><th>Categoria</th><th>Disponível</th><th>Estoque mínimo</th><th>Situação</th></tr></thead>
+                <tbody>
+                    {% for peca in pecas %}
+                    {% set situacao = 'sem' if peca.quantidade == 0 else 'baixo' if peca.quantidade <= peca.estoque_minimo else 'normal' %}
+                    <tr class="linha-atendimento {{ 'inventory-row-low' if situacao != 'normal' }}" data-status="{{ situacao }}" data-category="{{ peca.categoria }}" onclick="window.location.href='{{ url_for('estoque.editar_peca', id=peca.id) }}'">
+                        <td><strong>{{ peca.nome }}</strong>{% if situacao != 'normal' %}<small class="cell-secondary">Requer reposição</small>{% endif %}</td>
+                        <td><span class="category-pill category-{{ peca.categoria }}">{{ peca.categoria|capitalize }}</span></td>
+                        <td><strong class="stock-quantity {{ 'stock-quantity-low' if situacao != 'normal' }}">{{ peca.quantidade }}</strong><span class="cell-unit">un.</span></td>
+                        <td>{{ peca.estoque_minimo }} <span class="cell-unit">un.</span></td>
+                        <td><span class="status-pill {{ 'status-empty' if situacao == 'sem' else 'status-waiting' if situacao == 'baixo' else 'status-done' }}"><i></i>{{ 'Sem estoque' if situacao == 'sem' else 'Estoque baixo' if situacao == 'baixo' else 'Normal' }}</span></td>
+                    </tr>
                     {% else %}
-
-                        Normal
-
-                    {% endif %}
-
-                </td>
-
-            </tr>
-
-            {% else %}
-
-            <tr>
-
-                <td colspan="5" class="table-empty-row">
-                    Nenhuma peça cadastrada.
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
+                    <tr><td colspan="5" class="table-empty-row"><div class="list-empty"><strong>Seu estoque ainda está vazio</strong><span>Cadastre peças e suprimentos para acompanhar os saldos por aqui.</span><a href="{{ url_for('estoque.nova_peca') }}" class="btn">+ Novo item</a></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
-
 {% endblock %}

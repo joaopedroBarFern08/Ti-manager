@@ -1,96 +1,66 @@
 {% extends "base.html" %}
 
-{% block title %}
-Atendimentos - TI Manager
-{% endblock %}
-
-{% block page_title %}
-Atendimentos
+{% block title %}Atendimentos - TI Manager{% endblock %}
+{% block page_title %}Atendimentos{% endblock %}
+{% block header_actions %}
+    <a href="{{ url_for('atendimentos.novo_atendimento') }}" class="btn"><span aria-hidden="true">+</span> Novo atendimento</a>
 {% endblock %}
 
 {% block content %}
+<div class="operational-page">
+    <section class="page-intro">
+        <div>
+            <span class="page-eyebrow">CENTRAL DE SUPORTE</span>
+            <h2>Acompanhe cada chamado</h2>
+            <p>Consulte o andamento dos reparos e encontre rapidamente o atendimento que precisa.</p>
+        </div>
+        <div class="page-intro-mark" aria-hidden="true">◷</div>
+    </section>
 
-<div style="margin-bottom: 20px;">
+    <section class="overview-cards" aria-label="Resumo dos atendimentos">
+        <article class="overview-card overview-indigo"><span>Total de atendimentos</span><strong>{{ total_atendimentos }}</strong><small>Chamados registrados</small></article>
+        <article class="overview-card overview-amber"><span>Em andamento</span><strong>{{ atendimentos_abertos }}</strong><small>Precisam de acompanhamento</small></article>
+        <article class="overview-card overview-orange"><span>Aguardando peça</span><strong>{{ aguardando_peca }}</strong><small>Dependem de reposição</small></article>
+        <article class="overview-card overview-green"><span>Finalizados</span><strong>{{ atendimentos_finalizados }}</strong><small>Serviços concluídos</small></article>
+        <article class="overview-card overview-red"><span>Abertos há mais de 7 dias</span><strong>{{ atendimentos_abertos_ha_mais_de_7_dias }}</strong><small>Vale revisar o andamento</small></article>
+    </section>
 
-    <a
-        href="{{ url_for('atendimentos.novo_atendimento') }}"
-        class="btn"
-    >
-        + Novo atendimento
-    </a>
-
+    <section class="list-panel">
+        <div class="list-panel-heading">
+            <div><h2>Lista de atendimentos</h2><p>Selecione uma linha para abrir os detalhes do chamado.</p></div>
+            <span class="list-total">{{ total_atendimentos }} {{ 'registro' if total_atendimentos == 1 else 'registros' }}</span>
+        </div>
+        <div class="list-toolbar">
+            <div class="table-search list-search">
+                <label for="search-atendimentos">Buscar atendimento</label>
+                <input id="search-atendimentos" type="search" data-table-search="atendimentos-table" placeholder="Número, máquina, responsável ou problema..." autocomplete="off">
+                <span class="table-search-count" data-search-count="atendimentos-table" aria-live="polite"></span>
+            </div>
+            <label class="list-filter">Status
+                <select data-table-filter="atendimentos-table" data-filter-field="status" aria-label="Filtrar atendimentos por status">
+                    <option value="">Todos os status</option>
+                    {% for status in ['Recebido', 'Em diagnóstico', 'Aguardando peça', 'Em manutenção', 'Finalizado'] %}<option value="{{ status }}">{{ status }}</option>{% endfor %}
+                </select>
+            </label>
+        </div>
+        <div class="table-container">
+            <table id="atendimentos-table" data-search-empty="Nenhum atendimento corresponde aos filtros.">
+                <thead><tr><th>Atendimento</th><th>Máquina e responsável</th><th>Problema relatado</th><th>Status</th><th>Entrada</th></tr></thead>
+                <tbody>
+                    {% for atendimento in atendimentos %}
+                    <tr class="linha-atendimento {{ 'ticket-aging-row' if atendimento.status != 'Finalizado' and atendimento.data_entrada <= limite_acompanhamento }}" data-status="{{ atendimento.status }}" onclick="window.location.href='{{ url_for('atendimentos.detalhe_atendimento', id=atendimento.id) }}'">
+                        <td><span class="record-id">#{{ atendimento.id }}</span></td>
+                        <td><strong>{{ atendimento.maquina.identificador }}</strong><small class="cell-secondary">{{ atendimento.maquina.usuario or atendimento.maquina.setor or 'Sem responsável informado' }}</small></td>
+                        <td class="problem-cell">{{ atendimento.problema_relatado }}</td>
+                        <td><span class="status-pill {{ 'status-done' if atendimento.status == 'Finalizado' else ('status-waiting' if atendimento.status == 'Aguardando peça' else 'status-open') }}"><i></i>{{ atendimento.status }}</span>{% if atendimento.status != 'Finalizado' and atendimento.data_entrada <= limite_acompanhamento %}<small class="ticket-aging-label">Aberto há mais de 7 dias</small>{% endif %}</td>
+                        <td><time datetime="{{ atendimento.data_entrada.isoformat() }}">{{ atendimento.data_entrada.strftime('%d/%m/%Y') }}<small class="cell-secondary">{{ atendimento.data_entrada.strftime('%H:%M') }}</small></time></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="table-empty-row"><div class="list-empty"><strong>Nenhum atendimento por aqui</strong><span>Abra um chamado para começar a acompanhar os reparos.</span><a href="{{ url_for('atendimentos.novo_atendimento') }}" class="btn">+ Novo atendimento</a></div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
-
-<div class="table-search">
-    <label for="search-atendimentos">Buscar atendimento</label>
-    <input id="search-atendimentos" type="search" data-table-search="atendimentos-table" placeholder="Buscar em qualquer campo..." autocomplete="off">
-    <span class="table-search-count" data-search-count="atendimentos-table" aria-live="polite"></span>
-</div>
-
-<div class="table-container">
-
-    <table id="atendimentos-table" data-search-empty="Nenhum atendimento corresponde à busca.">
-
-        <thead>
-
-            <tr>
-                <th>Atendimento</th>
-                <th>Máquina</th>
-                <th>Problema relatado</th>
-                <th>Status</th>
-                <th>Data de entrada</th>
-            </tr>
-
-        </thead>
-
-
-        <tbody>
-
-            {% for atendimento in atendimentos %}
-
-            <tr
-                class="linha-atendimento"
-                onclick=window.location.href="{{ url_for('atendimentos.detalhe_atendimento', id=atendimento.id) }}"
-            >
-
-                <td>
-                    #{{ atendimento.id }}
-                </td>
-
-                <td>
-                    {{ atendimento.maquina.identificador }}
-                </td>
-
-                <td>
-                    {{ atendimento.problema_relatado }}
-                </td>
-
-                <td>
-                    {{ atendimento.status }}
-                </td>
-
-                <td>
-                    {{ atendimento.data_entrada.strftime('%d/%m/%Y %H:%M') }}
-                </td>
-
-            </tr>
-
-            {% else %}
-
-            <tr>
-
-                <td colspan="5" class="table-empty-row">
-                    Nenhum atendimento registrado.
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
-</div>
-
 {% endblock %}

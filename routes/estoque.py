@@ -20,10 +20,20 @@ def url_formulario_peca(proximo):
 def estoque():
 
     pecas = Peca.query.filter_by(visivel=True).order_by(Peca.nome).all()
+    pecas.sort(key=lambda peca: (
+        0 if peca.quantidade == 0 else 1 if peca.quantidade <= peca.estoque_minimo else 2,
+        peca.nome.casefold(),
+    ))
+    itens_estoque_baixo = sum(peca.quantidade <= peca.estoque_minimo for peca in pecas)
+    itens_sem_estoque = sum(peca.quantidade == 0 for peca in pecas)
+    unidades_disponiveis = sum(peca.quantidade for peca in pecas)
 
     return render_template(
         "estoque.html",
-        pecas=pecas
+        pecas=pecas,
+        itens_estoque_baixo=itens_estoque_baixo,
+        itens_sem_estoque=itens_sem_estoque,
+        unidades_disponiveis=unidades_disponiveis,
     )
 
 
@@ -229,6 +239,10 @@ def nova_peca():
 
 @estoque_bp.route("/saida", methods=["GET", "POST"])
 def saida():
+    tipo_saida = request.args.get("tipo", "estoque")
+    if tipo_saida not in {"estoque", "maquina"}:
+        tipo_saida = "estoque"
+
     if request.method == "POST":
         peca_id = request.form.get("peca_id", type=int)
         destinatario = " ".join(request.form.get("destinatario", "").split())
@@ -240,28 +254,28 @@ def saida():
 
         if not peca_id:
             flash("Selecione um produto da lista de sugestões.", "error")
-            return redirect(url_for("estoque.saida"))
+            return redirect(url_for("estoque.saida", tipo="estoque"))
 
         if not destinatario:
             flash("Informe para quem o produto foi entregue.", "error")
-            return redirect(url_for("estoque.saida"))
+            return redirect(url_for("estoque.saida", tipo="estoque"))
 
         if quantidade <= 0:
             flash("Informe uma quantidade maior que zero.", "error")
-            return redirect(url_for("estoque.saida"))
+            return redirect(url_for("estoque.saida", tipo="estoque"))
 
         peca = db.session.get(Peca, peca_id)
 
         if not peca or not peca.visivel:
             flash("Produto não encontrado.", "error")
-            return redirect(url_for("estoque.saida"))
+            return redirect(url_for("estoque.saida", tipo="estoque"))
 
         if quantidade > peca.quantidade:
             flash(
                 f"Estoque insuficiente. Disponível: {peca.quantidade} unidade(s).",
                 "error"
             )
-            return redirect(url_for("estoque.saida"))
+            return redirect(url_for("estoque.saida", tipo="estoque"))
 
         peca.quantidade -= quantidade
         db.session.add(MovimentacaoEstoque(
@@ -282,23 +296,27 @@ def saida():
             f"Saída de {quantidade} unidade(s) de {peca.nome} registrada.",
             "success"
         )
-        return redirect(url_for("estoque.saida"))
+        return redirect(url_for("estoque.saida", tipo="estoque"))
 
-    movimentacoes = MovimentacaoEstoque.query.order_by(
-        MovimentacaoEstoque.data.desc()
-    ).all()
-    maquinas_em_estoque = Maquina.query.filter_by(
-        visivel=True,
-        status_maquina="Em estoque",
-    ).order_by(Maquina.patrimonio).all()
-    saidas_maquinas = RegistroAuditoria.query.filter_by(
-        entidade="Saída de máquina"
-    ).order_by(
-        RegistroAuditoria.data_hora.desc(), RegistroAuditoria.id.desc()
-    ).limit(100).all()
+    movimentacoes = (
+        MovimentacaoEstoque.query.order_by(MovimentacaoEstoque.data.desc()).all()
+        if tipo_saida == "estoque" else []
+    )
+    maquinas_em_estoque = (
+        Maquina.query.filter_by(visivel=True, status_maquina="Em estoque")
+        .order_by(Maquina.patrimonio).all()
+        if tipo_saida == "maquina" else []
+    )
+    saidas_maquinas = (
+        RegistroAuditoria.query.filter_by(entidade="Saída de máquina")
+        .order_by(RegistroAuditoria.data_hora.desc(), RegistroAuditoria.id.desc())
+        .limit(100).all()
+        if tipo_saida == "maquina" else []
+    )
 
     return render_template(
         "saida_form.html",
+        tipo_saida=tipo_saida,
         movimentacoes=movimentacoes,
         maquinas_em_estoque=maquinas_em_estoque,
         saidas_maquinas=saidas_maquinas,
@@ -313,10 +331,10 @@ def saida_maquina():
 
     if not maquina_id:
         flash("Selecione uma máquina do estoque.", "error")
-        return redirect(url_for("estoque.saida"))
+        return redirect(url_for("estoque.saida", tipo="maquina"))
     if not setor:
         flash("Informe o setor de destino da máquina.", "error")
-        return redirect(url_for("estoque.saida"))
+        return redirect(url_for("estoque.saida", tipo="maquina"))
 
     maquina = Maquina.query.filter_by(
         id=maquina_id,
@@ -325,7 +343,7 @@ def saida_maquina():
     ).first()
     if not maquina:
         flash("A máquina selecionada não está mais disponível em estoque.", "error")
-        return redirect(url_for("estoque.saida"))
+        return redirect(url_for("estoque.saida", tipo="maquina"))
 
     maquina.status_maquina = "Ativo"
     maquina.ativo = True
@@ -339,7 +357,7 @@ def saida_maquina():
     db.session.commit()
 
     flash(f"Máquina {maquina.identificador} entregue ao setor {setor}.", "success")
-    return redirect(url_for("estoque.saida"))
+    return redirect(url_for("estoque.saida", tipo="maquina"))
 
 
 @estoque_bp.route("/pecas/<int:id>")

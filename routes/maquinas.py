@@ -16,10 +16,19 @@ def maquinas():
     maquinas = Maquina.query.order_by(
         Maquina.patrimonio
     ).filter_by(visivel=True).all()
+    maquinas_por_status = {
+        status: sum(maquina.status_maquina == status for maquina in maquinas)
+        for status in ("Ativo", "Em estoque", "Inativo")
+    }
+    modelos = sorted({(maquina.modelo or "").strip() for maquina in maquinas if (maquina.modelo or "").strip()}, key=str.casefold)
+    empresas = sorted({(maquina.empresa or "").strip() for maquina in maquinas if (maquina.empresa or "").strip()}, key=str.casefold)
 
     return render_template(
         "maquinas.html",
-        maquinas=maquinas
+        maquinas=maquinas,
+        maquinas_por_status=maquinas_por_status,
+        modelos=modelos,
+        empresas=empresas,
     )
 
 
@@ -118,7 +127,7 @@ def nova_maquina():
             existente.visivel = True
             registrar_acao(
                 "Adicionou", "Máquina", existente.id,
-                f"Reativou a máquina {existente.identificador}",
+                f"Adicionou a máquina {existente.identificador} ao registro operacional",
             )
             db.session.commit()
             flash("Máquina adicionada ao registro com sucesso!", "success")

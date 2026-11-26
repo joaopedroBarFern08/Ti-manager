@@ -4,7 +4,7 @@
 {% block content %}
 <div class="audit-page">
     <section class="audit-intro">
-        <div><span class="audit-eyebrow">HISTÓRICO DE AÇÕES</span><h2>Relatório de atividades</h2><p>Registro de inclusões, alterações, movimentações e exclusões feitas no sistema.</p></div>
+        <div><span class="audit-eyebrow">HISTÓRICO DE AÇÕES</span><h2>Relatório de atividades</h2><p>{% if administrador %}Inclui acessos ao sistema, além de inclusões, alterações, movimentações e exclusões.{% else %}Registro de inclusões, alterações, movimentações e exclusões feitas no sistema.{% endif %}</p></div>
         <span class="audit-total">{{ paginacao.total }} registro(s)</span>
     </section>
 
@@ -13,7 +13,7 @@
         <table class="audit-table">
             <thead><tr><th>Data e hora</th><th>Usuário</th><th>Ação</th><th>Registro</th><th>Detalhes</th></tr></thead>
             <tbody>
-                {% for registro in paginacao.items %}
+                {% for registro in paginacao.items if administrador or registro.acao != 'Acessou' %}
                 <tr>
                     <td>{{ registro.data_hora.strftime('%d/%m/%Y %H:%M:%S') }}</td>
                     <td><strong>{{ registro.usuario }}</strong></td>
